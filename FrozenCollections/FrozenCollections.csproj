@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <OutputType>Library</OutputType>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <WarningLevel>5</WarningLevel>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FrozenCollections.Test"/>
+  </ItemGroup>
+
+</Project>
