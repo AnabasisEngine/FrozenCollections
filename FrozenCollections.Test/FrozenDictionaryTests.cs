@@ -140,4 +140,24 @@ public static class FrozenDictionaryTests
         Assert.Throws<KeyNotFoundException>(() => fd[-1]);
         Assert.Throws<KeyNotFoundException>(() => fd.GetByRef(-1));
     }
+
+    [Fact]
+    public static void PairEnumerator()
+    {
+        var d = new Dictionary<string, int>();
+        var fd = d.Freeze();
+        var e = fd.GetEnumerator();
+        Assert.Throws<InvalidOperationException>(() => e.Current);
+        d.Add("One", 1);
+        fd = d.Freeze();
+        e = fd.GetEnumerator();
+        var e2 = (IEnumerator<KeyValuePair<string, int>>)e;
+        Assert.True(e2.MoveNext());
+        Assert.Equal("One", e2.Current.Key);
+        Assert.False(e2.MoveNext());
+        e2.Reset();
+        Assert.True(e2.MoveNext());
+        Assert.Equal("One", e2.Current.Key);
+        Assert.False(e2.MoveNext());
+    }
 }

@@ -72,6 +72,20 @@ public static class FrozenSetTests
     }
 
     [Fact]
+    public static void TooBig()
+    {
+        var s = new HashSet<int>();
+        for (int i = 0; i < ushort.MaxValue; i++)
+        {
+            s.Add(i);
+        }
+        var fs = s.Freeze();
+        Assert.Equal(s.Count, fs.Count);
+        s.Add(-1);
+        Assert.Throws<ArgumentException>(() => s.Freeze());
+    }
+
+    [Fact]
     public static void Empty()
     {
         var s = new HashSet<long>();

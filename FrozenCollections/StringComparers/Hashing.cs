@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace FrozenCollections.StringComparers;
 
@@ -68,6 +69,7 @@ internal static class Hashing
         return (int)(hash1 + (hash2 * 1_566_083_941));
     }
 
+    [SkipLocalsInit]
     public static unsafe int GetCaseInsensitiveHashCode(ReadOnlySpan<char> s)
     {
         int length = s.Length;
@@ -78,7 +80,7 @@ internal static class Hashing
             borrowedArr = ArrayPool<char>.Shared.Rent(length);
         }
 
-        Span<char> scratch = length <= 64 ? stackalloc char[64] : borrowedArr;
+        Span<char> scratch = length <= 64 ? stackalloc char[64] : borrowedArr.AsSpan(0, length);
         int charsWritten = s.ToUpperInvariant(scratch);   // WARNING: this really should be ToUpperOrdinal, but .NET doesn't offer this as a primitive
 
         uint hash1 = (5381 << 16) + 5381;

@@ -4,7 +4,9 @@
 // Heavily inspired (an understatement) from https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/HashSet.cs
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace FrozenCollections;
 
@@ -243,7 +245,7 @@ internal static class SetSupport
         {
             if (other is HashSet<string> hs)
             {
-                if (hs.Comparer == StringComparer.Ordinal)
+                if (object.ReferenceEquals(hs.Comparer, StringComparer.Ordinal))
                 {
                     return true;
                 }
@@ -296,6 +298,7 @@ internal static class SetSupport
     /// An earlier implementation used delegates to perform these checks rather than returning
     /// an ElementCount struct; however this was changed due to the perf overhead of delegates.
     /// </summary>
+    [SkipLocalsInit]
     private static unsafe (int uniqueCount, int unfoundCount) CheckUniqueAndUnfoundElements<T, TSet>(in TSet set, IEnumerable<T> other, bool returnIfUnfound)
         where TSet : IFrozenSet<T>, IFindItem<T>
         where T : notnull
@@ -318,10 +321,14 @@ internal static class SetSupport
         int originalCount = set.Count;
         int intArrayLength = BitHelper.ToIntArrayLength(originalCount);
 
-        Span<int> span = stackalloc int[StackAllocThreshold];
-        BitHelper bitHelper = intArrayLength <= StackAllocThreshold ?
-            new BitHelper(span[..intArrayLength], clear: true) :
-            new BitHelper(new int[intArrayLength], clear: false);
+        int[]? borrowedArr = null;
+        if (intArrayLength > StackAllocThreshold)
+        {
+            borrowedArr = ArrayPool<int>.Shared.Rent(intArrayLength);
+        }
+
+        Span<int> span = intArrayLength <= StackAllocThreshold ? stackalloc int[intArrayLength] : borrowedArr.AsSpan(0, intArrayLength);
+        var bitHelper = new BitHelper(span);
 
         int unfoundCount = 0; // count of items in other not found in this
         int uniqueFoundCount = 0; // count of unique items in other found in this
@@ -346,6 +353,11 @@ internal static class SetSupport
                     break;
                 }
             }
+        }
+
+        if (borrowedArr != null)
+        {
+            ArrayPool<int>.Shared.Return(borrowedArr);
         }
 
         return (uniqueFoundCount, unfoundCount);
@@ -386,34 +398,24 @@ internal static class SetSupport
         private const int IntSize = sizeof(int) * 8;
         private readonly Span<int> _span;
 
-        internal BitHelper(Span<int> span, bool clear)
+        internal BitHelper(Span<int> span)
         {
-            if (clear)
-            {
-                span.Clear();
-            }
-
+            span.Clear();
             _span = span;
         }
 
-        /// <summary>How many ints must be allocated to represent n bits. Returns (n+31)/32, but avoids overflow.</summary>
-        internal static int ToIntArrayLength(int n) => n > 0 ? (((n - 1) / IntSize) + 1) : 0;
+        internal static int ToIntArrayLength(int n) => ((n - 1) / IntSize) + 1;
 
         internal void MarkBit(int bitPosition)
         {
             int bitArrayIndex = bitPosition / IntSize;
-            if ((uint)bitArrayIndex < (uint)_span.Length)
-            {
-                _span[bitArrayIndex] |= 1 << (bitPosition % IntSize);
-            }
+            _span[bitArrayIndex] |= 1 << (bitPosition % IntSize);
         }
 
         internal bool IsMarked(int bitPosition)
         {
             int bitArrayIndex = bitPosition / IntSize;
-            return
-                (uint)bitArrayIndex < (uint)_span.Length &&
-                (_span[bitArrayIndex] & (1 << (bitPosition % IntSize))) != 0;
+            return (_span[bitArrayIndex] & (1 << (bitPosition % IntSize))) != 0;
         }
     }
 }

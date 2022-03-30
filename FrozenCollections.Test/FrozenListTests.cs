@@ -54,4 +54,24 @@ public static class FrozenListTests
         Assert.Empty(fl);
         Assert.False(((IEnumerable<int>)fl).GetEnumerator().MoveNext());
     }
+
+    [Fact]
+    public static void Enumerator()
+    {
+        var l = new List<int>();
+        var fl = l.FreezeAsList();
+        var e = fl.GetEnumerator();
+        Assert.Throws<InvalidOperationException>(() => e.Current);
+        l.Add(1);
+        fl = l.FreezeAsList();
+        e = fl.GetEnumerator();
+        var e2 = (IEnumerator<int>)e;
+        Assert.True(e2.MoveNext());
+        Assert.Equal(1, e2.Current);
+        Assert.False(e2.MoveNext());
+        e2.Reset();
+        Assert.True(e2.MoveNext());
+        Assert.Equal(1, e2.Current);
+        Assert.False(e2.MoveNext());
+    }
 }

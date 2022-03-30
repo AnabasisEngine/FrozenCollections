@@ -52,7 +52,7 @@ public readonly struct FrozenHashTable
     public static FrozenHashTable Create<T>(IReadOnlyList<T> entries, Func<T, int> hasher, Action<int, T> setter)
     {
         var numEntries = entries.Count;
-        if (numEntries >= ushort.MaxValue)
+        if (numEntries > ushort.MaxValue)
         {
             throw new ArgumentException($"Frozen collections can only have a maximum of 64K entries, the input contained {numEntries} entries", nameof(entries));
         }

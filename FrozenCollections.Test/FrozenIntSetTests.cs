@@ -103,9 +103,20 @@ public static class FrozenIntSetTests
     [InlineData(new[] { 0, 1, 2, 3, 3, 2, 1, 0 })]
     public static void SetOps(int[] other)
     {
-        for (int i = 0; i < 5; i++)
+        var l = new List<int>
         {
-            var s = new HashSet<int>();
+            0,
+            1,
+            2,
+            3,
+            4,
+            2049
+        };
+
+        var s = new HashSet<int>();
+        foreach (var i in l)
+        {
+            s.Clear();
             for (var j = 0; j < i; j++)
             {
                 s.Add(j);
