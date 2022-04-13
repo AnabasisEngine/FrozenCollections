@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Xunit;
 
@@ -17,7 +18,7 @@ public static class FrozenListTests
             l.Add(i);
         }
 
-        var fl = l.FreezeAsList();
+        var fl = l.ToFrozenList();
         Assert.Equal(l.Count, fl.Count);
 
         for (var i = 0; i < l.Count; i++)
@@ -32,7 +33,9 @@ public static class FrozenListTests
         }
 
         index = 0;
+#pragma warning disable IDE0004
         foreach (var v in (IEnumerable<int>)fl)
+#pragma warning restore IDE0004
         {
             Assert.Equal(index++, v);
         }
@@ -40,31 +43,42 @@ public static class FrozenListTests
         index = 0;
         foreach (var o in (IEnumerable)fl)
         {
-            var v = (int)o;
+            var v = (int)o!;
             Assert.Equal(index++, v);
         }
+
+        Assert.IsType<FrozenEnumerator<int>>(((IEnumerable)fl).GetEnumerator());
+        Assert.IsType<FrozenEnumerator<int>>(((IEnumerable<int>)fl).GetEnumerator());
     }
 
     [Fact]
     public static void Empty()
     {
         var l = new List<int>();
-        var fl = l.FreezeAsList();
+        var fl = l.ToFrozenList();
 
         Assert.Empty(fl);
+
+        Assert.False(((IEnumerable)fl).GetEnumerator().MoveNext());
         Assert.False(((IEnumerable<int>)fl).GetEnumerator().MoveNext());
+
+        Assert.IsNotType<FrozenEnumerator<int>>(((IEnumerable)fl).GetEnumerator());
+        Assert.IsNotType<FrozenEnumerator<int>>(((IEnumerable<int>)fl).GetEnumerator());
     }
 
     [Fact]
     public static void Enumerator()
     {
         var l = new List<int>();
-        var fl = l.FreezeAsList();
+        var fl = l.ToFrozenList();
         var e = fl.GetEnumerator();
+
         Assert.Throws<InvalidOperationException>(() => e.Current);
+
         l.Add(1);
-        fl = l.FreezeAsList();
+        fl = l.ToFrozenList();
         e = fl.GetEnumerator();
+
         var e2 = (IEnumerator<int>)e;
         Assert.True(e2.MoveNext());
         Assert.Equal(1, e2.Current);

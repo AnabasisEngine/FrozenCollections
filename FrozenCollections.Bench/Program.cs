@@ -15,29 +15,33 @@ public class Program
     private const int NotFoundRatio = 2;    // 1 out of NotFoundRatio will query for an unknown key
     private const int NumKeys = 1024;
 
-    private readonly static string[] _stringKeys = new string[NumKeys];
-    private readonly static int[] _intKeys = new int[NumKeys];
-    private readonly static ComplexKey[] _complexKeys = new ComplexKey[NumKeys];
+    private static readonly string[] _stringKeys = new string[NumKeys];
+    private static readonly int[] _intKeys = new int[NumKeys];
+    private static readonly ComplexKey[] _complexKeys = new ComplexKey[NumKeys];
 
-    private readonly static Dictionary<string, int> _classicOrdinalStringDictionary;
-    private readonly static Dictionary<string, int> _classicOrdinalCaseInsensitiveStringDictionary;
-    private readonly static Dictionary<int, int> _classicIntDictionary;
-    private readonly static Dictionary<ComplexKey, int> _classicComplexDictionary;
+    private static readonly Dictionary<string, int> _classicOrdinalStringDictionary;
+    private static readonly Dictionary<string, int> _classicOrdinalCaseInsensitiveStringDictionary;
+    private static readonly Dictionary<int, int> _classicIntDictionary;
+    private static readonly Dictionary<ComplexKey, int> _classicComplexDictionary;
 
-    private readonly static FrozenOrdinalStringDictionary<int> _frozenOrdinalStringDictionary;
-    private readonly static FrozenOrdinalStringDictionary<int> _frozenOrdinalCaseInsensitiveStringDictionary;
-    private readonly static FrozenIntDictionary<int> _frozenIntDictionary;
-    private readonly static FrozenDictionary<ComplexKey, int> _frozenComplexDictionary;
+    private static readonly FrozenOrdinalStringDictionary<int> _frozenOrdinalStringDictionary;
+    private static readonly FrozenOrdinalStringDictionary<int> _frozenOrdinalCaseInsensitiveStringDictionary;
+    private static readonly FrozenIntDictionary<int> _frozenIntDictionary;
+    private static readonly FrozenDictionary<ComplexKey, int> _frozenComplexDictionary;
 
-    private readonly static HashSet<string> _classicOrdinalStringSet;
-    private readonly static HashSet<string> _classicOrdinalCaseInsensitiveStringSet;
-    private readonly static HashSet<int> _classicIntSet;
-    private readonly static HashSet<ComplexKey> _classicComplexSet;
+    private static readonly HashSet<string> _classicOrdinalStringSet;
+    private static readonly HashSet<string> _classicOrdinalCaseInsensitiveStringSet;
+    private static readonly HashSet<int> _classicIntSet;
+    private static readonly HashSet<ComplexKey> _classicComplexSet;
 
-    private readonly static FrozenOrdinalStringSet _frozenOrdinalStringSet;
-    private readonly static FrozenOrdinalStringSet _frozenOrdinalCaseInsensitiveStringSet;
-    private readonly static FrozenIntSet _frozenIntSet;
-    private readonly static FrozenSet<ComplexKey> _frozenComplexSet;
+    private static readonly FrozenOrdinalStringSet _frozenOrdinalStringSet;
+    private static readonly FrozenOrdinalStringSet _frozenOrdinalCaseInsensitiveStringSet;
+    private static readonly FrozenIntSet _frozenIntSet;
+    private static readonly FrozenSet<ComplexKey> _frozenComplexSet;
+
+#pragma warning disable S3963 // "static" fields should be initialized inline
+#pragma warning disable S109 // Magic numbers should not be used
+#pragma warning disable CA1810 // Initialize reference type static fields inline
 
     static Program()
     {
@@ -102,35 +106,30 @@ public class Program
             _classicIntSet.Add(i);
         }
 
-
         _classicComplexSet = new HashSet<ComplexKey>(new ComplexKeyComparer());
         for (int i = 0; i < _complexKeys.Length; i += NotFoundRatio)
         {
             _classicComplexSet.Add(_complexKeys[i]);
         }
 
-        _frozenOrdinalStringDictionary = _classicOrdinalStringDictionary.Freeze();
-        _frozenOrdinalCaseInsensitiveStringDictionary = _classicOrdinalCaseInsensitiveStringDictionary.Freeze(true);
-        _frozenIntDictionary = _classicIntDictionary.Freeze();
-        _frozenComplexDictionary = _classicComplexDictionary.Freeze(new ComplexKeyComparer());
+        _frozenOrdinalStringDictionary = _classicOrdinalStringDictionary.ToFrozenDictionary();
+        _frozenOrdinalCaseInsensitiveStringDictionary = _classicOrdinalCaseInsensitiveStringDictionary.ToFrozenDictionary(true);
+        _frozenIntDictionary = _classicIntDictionary.ToFrozenDictionary();
+        _frozenComplexDictionary = _classicComplexDictionary.ToFrozenDictionary(new ComplexKeyComparer());
 
-        _frozenOrdinalStringSet = _classicOrdinalStringSet.Freeze();
-        _frozenOrdinalCaseInsensitiveStringSet = _classicOrdinalCaseInsensitiveStringSet.Freeze(true);
-        _frozenIntSet = _classicIntSet.Freeze();
-        _frozenComplexSet = _classicComplexSet.Freeze(new ComplexKeyComparer());
+        _frozenOrdinalStringSet = _classicOrdinalStringSet.ToFrozenSet();
+        _frozenOrdinalCaseInsensitiveStringSet = _classicOrdinalCaseInsensitiveStringSet.ToFrozenSet(true);
+        _frozenIntSet = _classicIntSet.ToFrozenSet();
+        _frozenComplexSet = _classicComplexSet.ToFrozenSet(new ComplexKeyComparer());
     }
 
     public static void Main(string[] args)
     {
-#if DEBUG
-        new Program().FrozenOrdinalStringDictionary();
-#else
         var dontRequireSlnToRunBenchmarks = ManualConfig
             .Create(DefaultConfig.Instance)
             .AddJob(Job.MediumRun.WithToolchain(InProcessEmitToolchain.Instance));
 
         BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, dontRequireSlnToRunBenchmarks);
-#endif
     }
 
 #pragma warning disable CA1822 // Mark members as static

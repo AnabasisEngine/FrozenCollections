@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FrozenCollections.StringComparers;
 
@@ -16,5 +17,5 @@ internal sealed class FullStringComparer : StringComparerBase
 {
     public override bool Equals(string x, string y) => string.Equals(x, y);
     public override bool EqualsFullLength(string x, string y) => string.Equals(x, y);
-    public override int GetHashCode(string s) => Hashing.GetHashCode(s);
+    public override int GetHashCode(string s) => Hashing.GetHashCode(s.AsSpan());
 }

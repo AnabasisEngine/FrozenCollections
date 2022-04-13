@@ -37,7 +37,7 @@ public interface IFrozenDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TVa
     /// Returns an enumerator that iterates through the dictionary.
     /// </summary>
     /// <returns>An enumerator that makes it possible to iterate through the dictionary's entries.</returns>
-    new PairEnumerator<TKey, TValue> GetEnumerator();
+    new FrozenPairEnumerator<TKey, TValue> GetEnumerator();
 
     /// <summary>
     /// Gets a reference to a value in the dictionary.

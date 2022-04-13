@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -20,9 +19,10 @@ namespace FrozenCollections;
 /// This hash table doesn't track any of the collection state. It merely keeps track of hash codes
 /// and of mapping these hash codes to spans of entries within the collection.
 /// </remarks>
-[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Not appropriate for this type")]
-public readonly struct FrozenHashTable
+internal readonly struct FrozenHashTable
 {
+    private static readonly Bucket[] _emptyBuckets = GetEmptyBuckets();
+
     private readonly Bucket[] _buckets;
     private readonly ulong _fastModMultiplier;
 
@@ -52,11 +52,6 @@ public readonly struct FrozenHashTable
     public static FrozenHashTable Create<T>(IReadOnlyList<T> entries, Func<T, int> hasher, Action<int, T> setter)
     {
         var numEntries = entries.Count;
-        if (numEntries > ushort.MaxValue)
-        {
-            throw new ArgumentException($"Frozen collections can only have a maximum of 64K entries, the input contained {numEntries} entries", nameof(entries));
-        }
-
         int[] hashCodes;
         Bucket[] buckets;
         ulong fastModMultiplier;
@@ -64,8 +59,7 @@ public readonly struct FrozenHashTable
         if (numEntries == 0)
         {
             hashCodes = Array.Empty<int>();
-            buckets = new Bucket[1];
-            buckets[0] = new Bucket(0, 0);
+            buckets = _emptyBuckets;
             fastModMultiplier = GetFastModMultiplier(1);
         }
         else
@@ -101,7 +95,7 @@ public readonly struct FrozenHashTable
             {
                 uint bucket = FastMod((uint)list[0].HashCode, (uint)buckets.Length, fastModMultiplier);
 
-                buckets[bucket] = new Bucket((ushort)count, (ushort)list.Count);
+                buckets[bucket] = new Bucket(count, list.Count);
                 for (int i = 0; i < list.Count; i++)
                 {
                     hashCodes[count] = list[i].HashCode;
@@ -123,10 +117,20 @@ public readonly struct FrozenHashTable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FindMatchingEntries(int hashCode, out int startIndex, out int endIndex)
     {
+        if (_buckets == null)
+        {
+            // handles the case when using an uninitialized frozen collection
+            startIndex = 1;
+            endIndex = 0;
+            return;
+        }
+
         ref var b = ref _buckets[FastMod((uint)hashCode, (uint)_buckets.Length, _fastModMultiplier)];
         startIndex = b.StartIndex;
         endIndex = b.EndIndex;
     }
+
+    public int Count => HashCodes?.Length ?? 0;
 
     /// <summary>
     /// Given an entry, get its hash code.
@@ -137,6 +141,13 @@ public readonly struct FrozenHashTable
     public int EntryHashCode(int entry) => HashCodes[entry];
 
     internal int[] HashCodes { get; }
+
+    private static Bucket[] GetEmptyBuckets()
+    {
+        var buckets = new Bucket[1];
+        buckets[0] = new Bucket(1, 0);
+        return buckets;
+    }
 
     /// <summary>
     /// Given an array of hash codes, figure out the best number of hash buckets to use.
@@ -238,10 +249,10 @@ public readonly struct FrozenHashTable
 
     private readonly struct Bucket
     {
-        public readonly ushort StartIndex;
-        public readonly ushort EndIndex;
+        public readonly int StartIndex;
+        public readonly int EndIndex;
 
-        public Bucket(ushort index, ushort count)
+        public Bucket(int index, int count)
         {
             if (count == 0)
             {
@@ -251,7 +262,7 @@ public readonly struct FrozenHashTable
             else
             {
                 StartIndex = index;
-                EndIndex = (ushort)(index + count - 1);
+                EndIndex = index + count - 1;
             }
         }
     }

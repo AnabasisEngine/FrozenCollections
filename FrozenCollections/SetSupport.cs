@@ -1,7 +1,7 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿// Heavily inspired (an understatement) from https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/HashSet.cs
 
-// Heavily inspired (an understatement) from https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/HashSet.cs
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.Buffers;
@@ -16,11 +16,6 @@ internal static class SetSupport
         where TSet : IFrozenSet<T>, IFindItem<T>
         where T : notnull
     {
-        if (other == null)
-        {
-            throw new ArgumentNullException(nameof(other));
-        }
-
         if (other is ICollection<T> otherAsCollection)
         {
             // No set is a proper subset of an empty set.
@@ -57,11 +52,6 @@ internal static class SetSupport
         where TSet : IFrozenSet<T>, IFindItem<T>
         where T : notnull
     {
-        if (other == null)
-        {
-            throw new ArgumentNullException(nameof(other));
-        }
-
         // The empty set isn't a proper superset of any set, and a set is never a strict superset of itself.
         if (set.Count == 0)
         {
@@ -99,11 +89,6 @@ internal static class SetSupport
         where TSet : IFrozenSet<T>, IFindItem<T>
         where T : notnull
     {
-        if (other == null)
-        {
-            throw new ArgumentNullException(nameof(other));
-        }
-
         // The empty set is a subset of any set, and a set is a subset of itself.
         // Set is always a subset of itself
         if (set.Count == 0)
@@ -134,11 +119,6 @@ internal static class SetSupport
         where TSet : IFrozenSet<T>
         where T : notnull
     {
-        if (other == null)
-        {
-            throw new ArgumentNullException(nameof(other));
-        }
-
         // Try to fall out early based on counts.
         if (other is ICollection<T> otherAsCollection)
         {
@@ -164,11 +144,6 @@ internal static class SetSupport
         where TSet : IFrozenSet<T>
         where T : notnull
     {
-        if (other == null)
-        {
-            throw new ArgumentNullException(nameof(other));
-        }
-
         if (set.Count == 0)
         {
             return false;
@@ -189,11 +164,6 @@ internal static class SetSupport
         where TSet : IFrozenSet<T>, IFindItem<T>
         where T : notnull
     {
-        if (other == null)
-        {
-            throw new ArgumentNullException(nameof(other));
-        }
-
         // Faster if other is a hashset and we're using same equality comparer.
         if (other is IReadOnlySet<T> otherAsSet && CompatibleComparers(set, otherAsSet))
         {
@@ -227,50 +197,41 @@ internal static class SetSupport
         where TSet : IFrozenSet<T>
         where T : notnull
     {
-        if (set is FrozenIntSet)
-        {
-            if (other is HashSet<int> hs)
-            {
-                if (hs.Comparer == EqualityComparer<int>.Default)
-                {
-                    return true;
-                }
-            }
-            else if (other is FrozenIntSet)
-            {
-                return true;
-            }
-        }
-        else if (set is FrozenOrdinalStringSet)
+        if (set is FrozenOrdinalStringSet foss)
         {
             if (other is HashSet<string> hs)
             {
-                if (object.ReferenceEquals(hs.Comparer, StringComparer.Ordinal))
+                if (foss.Comparer.CaseInsensitive)
                 {
-                    return true;
+                    return hs.Comparer.Equals(StringComparer.OrdinalIgnoreCase);
                 }
+
+                return hs.Comparer.Equals(StringComparer.Ordinal);
             }
-            else if (other is FrozenOrdinalStringSet)
+            else if (other is FrozenOrdinalStringSet otherfoss)
             {
-                return true;
+                return foss.Comparer.CaseInsensitive == otherfoss.Comparer.CaseInsensitive;
             }
         }
         else if (set is FrozenSet<T> s)
         {
             if (other is HashSet<T> hs)
             {
-                if (hs.Comparer == s.Comparer)
-                {
-                    return true;
-                }
+                return hs.Comparer == s.Comparer;
             }
             else if (other is FrozenSet<T> fs)
             {
-                if (fs.Comparer == s.Comparer)
-                {
-                    return true;
-                }
+                return fs.Comparer == s.Comparer;
             }
+        }
+        else
+        {
+            if (other is HashSet<int> hs)
+            {
+                return hs.Comparer == EqualityComparer<int>.Default;
+            }
+
+            return other is FrozenIntSet;
         }
 
         return false;

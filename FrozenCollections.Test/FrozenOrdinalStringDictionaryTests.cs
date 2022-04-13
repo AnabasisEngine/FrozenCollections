@@ -17,7 +17,7 @@ public static class FrozenOrdinalStringDictionaryTests
             d.Add($"K{i}", $"V{i}");
         }
 
-        var fd = d.Freeze();
+        var fd = d.ToFrozenDictionary();
         Assert.Equal(d.Count, fd.Count);
 
         foreach (var kvp in d)
@@ -56,7 +56,7 @@ public static class FrozenOrdinalStringDictionaryTests
         s.Clear();
         foreach (var o in (IEnumerable)fd)
         {
-            var kvp = (KeyValuePair<string, string>)o;
+            var kvp = (KeyValuePair<string, string>)o!;
             Assert.True(d.ContainsKey(kvp.Key));
             Assert.True(d.TryGetValue(kvp.Key, out var value));
             Assert.Equal(kvp.Value, value);
@@ -118,7 +118,7 @@ public static class FrozenOrdinalStringDictionaryTests
     public static void Empty()
     {
         var d = new Dictionary<string, string>();
-        var fd = d.Freeze();
+        var fd = d.ToFrozenDictionary();
 
         Assert.Empty(fd);
         Assert.False(((IEnumerable<KeyValuePair<string, string>>)fd).GetEnumerator().MoveNext());

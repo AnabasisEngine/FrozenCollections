@@ -25,7 +25,11 @@ public readonly struct FrozenOrdinalStringSet : IFrozenSet<string>, IFindItem<st
 {
     private readonly FrozenHashTable _hashTable;
     private readonly string[] _items;
-    private readonly StringComparerBase _comparer;
+
+    /// <summary>
+    /// Gets an empty frozen string set.
+    /// </summary>
+    public static FrozenOrdinalStringSet Empty => default;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FrozenOrdinalStringSet"/> struct.
@@ -37,11 +41,11 @@ public readonly struct FrozenOrdinalStringSet : IFrozenSet<string>, IFindItem<st
     {
         var incoming = new HashSet<string>(items).ToList();
 
-        _items = new string[incoming.Count];
-        _comparer = ComparerPicker.Pick(incoming, ignoreCase);
+        _items = incoming.Count == 0 ? Array.Empty<string>() : new string[incoming.Count];
+        Comparer = ComparerPicker.Pick(incoming, ignoreCase);
 
         var it = _items;
-        var comparer = _comparer;
+        var comparer = Comparer;
         _hashTable = FrozenHashTable.Create(
             incoming,
             item => comparer.GetHashCode(item),
@@ -52,38 +56,45 @@ public readonly struct FrozenOrdinalStringSet : IFrozenSet<string>, IFindItem<st
     public FrozenList<string> Items => new(_items);
 
     /// <inheritdoc />
-    public Enumerator<string> GetEnumerator() => new(_items);
+    public FrozenEnumerator<string> GetEnumerator() => new(_items);
 
     /// <summary>
     /// Gets an enumeration of the set's items.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator<string> IEnumerable<string>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<string>.Instance.Enumerator;
+    IEnumerator<string> IEnumerable<string>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<string>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets an enumeration of the set's items.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<string>.Instance.Enumerator;
+    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<string>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets the number of items in the set.
     /// </summary>
-    public int Count => _items.Length;
+    public int Count => _hashTable.Count;
 
-    /// <inheritdoc />
+    internal StringComparerBase Comparer { get; }
+
+    /// <summary>
+    /// Checks whether an item is present in the set.
+    /// </summary>
+    /// <param name="item">The item to probe for.</param>
+    /// <returns><see langword="true"/> if the item is in the set, <see langword="false"/> otherwise.</returns>
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Skip for speed")]
     public bool Contains(string item)
     {
-        if (!_comparer.TrivialReject(item))
+        if (Comparer != null && !Comparer.TrivialReject(item))
         {
-            var hashCode = _comparer.GetHashCode(item);
+            var hashCode = Comparer.GetHashCode(item);
             _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
             while (index <= endIndex)
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (_comparer.EqualsFullLength(item, _items[index]))
+                    if (Comparer.EqualsFullLength(item, _items[index]))
                     {
                         return true;
                     }
@@ -103,16 +114,16 @@ public readonly struct FrozenOrdinalStringSet : IFrozenSet<string>, IFindItem<st
     /// <returns>The index of the item, or -1 if the item was not found.</returns>
     int IFindItem<string>.FindItemIndex(string item)
     {
-        if (!_comparer.TrivialReject(item))
+        if (Comparer != null && !Comparer.TrivialReject(item))
         {
-            var hashCode = _comparer.GetHashCode(item);
+            var hashCode = Comparer.GetHashCode(item);
             _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
             while (index <= endIndex)
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (_comparer.EqualsFullLength(item, _items[index]))
+                    if (Comparer.EqualsFullLength(item, _items[index]))
                     {
                         return index;
                     }

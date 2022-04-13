@@ -18,7 +18,7 @@ public static class FrozenOrdinalCaseInsensitiveStringDictionaryTests
             d.Add($"K{i}", $"V{i}");
         }
 
-        var fd = d.Freeze(true);
+        var fd = d.ToFrozenDictionary(true);
         Assert.Equal(d.Count, fd.Count);
 
         foreach (var kvp in d)
@@ -63,7 +63,7 @@ public static class FrozenOrdinalCaseInsensitiveStringDictionaryTests
         s.Clear();
         foreach (var o in (IEnumerable)fd)
         {
-            var kvp = (KeyValuePair<string, string>)o;
+            var kvp = (KeyValuePair<string, string>)o!;
             Assert.True(d.ContainsKey(kvp.Key));
             Assert.True(d.TryGetValue(kvp.Key, out var value));
             Assert.Equal(kvp.Value, value);
@@ -125,7 +125,7 @@ public static class FrozenOrdinalCaseInsensitiveStringDictionaryTests
     public static void Empty()
     {
         var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var fd = d.Freeze(true);
+        var fd = d.ToFrozenDictionary(true);
 
         Assert.Empty(fd);
         Assert.False(((IEnumerable<KeyValuePair<string, string>>)fd).GetEnumerator().MoveNext());

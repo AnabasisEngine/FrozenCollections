@@ -22,4 +22,6 @@ internal abstract class StringComparerBase
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TrivialReject(string s) => s.Length < MinLength || s.Length > MaxLength;
+
+    public virtual bool CaseInsensitive => false;
 }

@@ -28,5 +28,5 @@ public interface IFrozenSet<T> : IReadOnlySet<T>
     /// Returns an enumerator that iterates through a set.
     /// </summary>
     /// <returns>An enumerator that makes it possible to iterate through a set's items.</returns>
-    new Enumerator<T> GetEnumerator();
+    new FrozenEnumerator<T> GetEnumerator();
 }

@@ -1,4 +1,5 @@
-﻿using FrozenCollections.StringComparers;
+﻿using System;
+using FrozenCollections.StringComparers;
 using Xunit;
 
 namespace FrozenCollections.Test;
@@ -9,7 +10,7 @@ public static class HashingTests
     public static void CaseInsensitive()
     {
         Assert.Equal(
-            Hashing.GetCaseInsensitiveHashCode("abcdefghijklmnopqrstuvwxyz01234567890123456789abcdefghijklmnopqrstuvwxyz01234567890123456789"),
-            Hashing.GetCaseInsensitiveHashCode("ABCdefghijklmnopqrstuvwxyz01234567890123456789abcdefghijklmnopqrstuvwxyz01234567890123456789"));
+            Hashing.GetCaseInsensitiveHashCode("abcdefghijklmnopqrstuvwxyz01234567890123456789abcdefghijklmnopqrstuvwxyz01234567890123456789".AsSpan()),
+            Hashing.GetCaseInsensitiveHashCode("ABCdefghijklmnopqrstuvwxyz01234567890123456789abcdefghijklmnopqrstuvwxyz01234567890123456789".AsSpan()));
     }
 }

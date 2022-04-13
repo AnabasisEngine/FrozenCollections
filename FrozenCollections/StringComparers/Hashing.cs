@@ -6,6 +6,9 @@ using System.Runtime.CompilerServices;
 
 namespace FrozenCollections.StringComparers;
 
+// Stryker is not at all effective for hash codes, so we disable it
+// Stryker disable all
+
 [SuppressMessage("Major Code Smell", "S109:Magic numbers should not be used", Justification = "All sorts of magic numbers here, that's OK")]
 internal static class Hashing
 {

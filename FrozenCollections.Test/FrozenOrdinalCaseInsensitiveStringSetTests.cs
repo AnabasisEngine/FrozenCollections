@@ -19,7 +19,7 @@ public static class FrozenOrdinalCaseInsensitiveStringSetTests
             s.Add($"K{i}");
         }
 
-        var fs = s.Freeze(true);
+        var fs = s.ToFrozenSet(true);
         Assert.Equal(s.Count, fs.Count);
 
         foreach (var v in s)
@@ -38,7 +38,9 @@ public static class FrozenOrdinalCaseInsensitiveStringSetTests
         Assert.Equal(s.Count, t.Count);
 
         t.Clear();
+#pragma warning disable IDE0004
         foreach (var v in (IEnumerable<string>)fs)
+#pragma warning restore IDE0004
         {
             Assert.Contains(v, fs);
             t.Add(v);
@@ -49,9 +51,9 @@ public static class FrozenOrdinalCaseInsensitiveStringSetTests
         t.Clear();
         foreach (var o in (IEnumerable)fs)
         {
-            var v = (string)o;
+            var v = (string)o!;
             Assert.Contains(v, s);
-            t.Add(v);
+            t.Add(v!);
         }
 
         Assert.Equal(s.Count, t.Count);
@@ -72,7 +74,7 @@ public static class FrozenOrdinalCaseInsensitiveStringSetTests
     public static void Empty()
     {
         var s = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var fs = s.Freeze(true);
+        var fs = s.ToFrozenSet(true);
 
         Assert.Empty(fs);
         Assert.False(((IEnumerable<string>)fs).GetEnumerator().MoveNext());
@@ -87,7 +89,7 @@ public static class FrozenOrdinalCaseInsensitiveStringSetTests
     {
         var items = new[] { "0", "1", "2", "3", "3" };
         var hs = new HashSet<string>(items, StringComparer.OrdinalIgnoreCase);
-        var fs = items.Freeze(true);
+        var fs = items.ToFrozenSet(true);
 
         Assert.Equal(hs.Count, fs.Count);
     }
@@ -120,7 +122,7 @@ public static class FrozenOrdinalCaseInsensitiveStringSetTests
                 s.Add(j.ToString(CultureInfo.InvariantCulture));
             }
 
-            var fs = s.Freeze(true);
+            var fs = s.ToFrozenSet(true);
 
             Assert.Equal(s.IsSubsetOf(other), fs.IsSubsetOf(other));
             Assert.Equal(s.IsProperSubsetOf(other), fs.IsProperSubsetOf(other));
@@ -137,7 +139,7 @@ public static class FrozenOrdinalCaseInsensitiveStringSetTests
             Assert.Equal(s.Overlaps(other2), fs.Overlaps(other2));
             Assert.Equal(s.SetEquals(other2), fs.SetEquals(other2));
 
-            var other3 = other.Freeze();
+            var other3 = other.ToFrozenSet();
             Assert.Equal(s.IsSubsetOf(other3), fs.IsSubsetOf(other3));
             Assert.Equal(s.IsProperSubsetOf(other3), fs.IsProperSubsetOf(other3));
             Assert.Equal(s.IsSupersetOf(other3), fs.IsSupersetOf(other3));

@@ -14,5 +14,6 @@ internal sealed class FullCaseInsensitiveAsciiStringComparer : StringComparerBas
 {
     public override bool Equals(string x, string y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
     public override bool EqualsFullLength(string x, string y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
-    public override int GetHashCode(string s) => Hashing.GetCaseInsensitiveAsciiHashCode(s);
+    public override int GetHashCode(string s) => Hashing.GetCaseInsensitiveAsciiHashCode(s.AsSpan());
+    public override bool CaseInsensitive => true;
 }

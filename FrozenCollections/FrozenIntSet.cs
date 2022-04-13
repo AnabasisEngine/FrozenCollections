@@ -24,6 +24,11 @@ public readonly struct FrozenIntSet : IFrozenSet<int>, IFindItem<int>
 {
     private readonly FrozenHashTable _hashTable;
 
+    /// <summary>
+    /// Gets an empty frozen integer set.
+    /// </summary>
+    public static FrozenIntSet Empty => default;
+
     internal FrozenIntSet(IEnumerable<int> items)
     {
         var incoming = new HashSet<int>(items).ToList();
@@ -38,30 +43,33 @@ public readonly struct FrozenIntSet : IFrozenSet<int>, IFindItem<int>
     public FrozenList<int> Items => new(_hashTable.HashCodes);
 
     /// <inheritdoc />
-    public Enumerator<int> GetEnumerator() => new(_hashTable.HashCodes);
+    public FrozenEnumerator<int> GetEnumerator() => new(_hashTable.HashCodes);
 
     /// <summary>
     /// Gets an enumeration of the set's items.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator<int> IEnumerable<int>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<int>.Instance.Enumerator;
+    IEnumerator<int> IEnumerable<int>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<int>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets an enumeration of the set's items.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<int>.Instance.Enumerator;
+    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<int>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets the number of items in the set.
     /// </summary>
-    public int Count => _hashTable.HashCodes.Length;
+    public int Count => _hashTable.Count;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Checks whether an item is present in the set.
+    /// </summary>
+    /// <param name="item">The item to probe for.</param>
+    /// <returns><see langword="true"/> if the item is in the set, <see langword="false"/> otherwise.</returns>
     public bool Contains(int item)
     {
-        var hashCode = item;
-        _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
+        _hashTable.FindMatchingEntries(item, out var index, out var endIndex);
 
         while (index <= endIndex)
         {
@@ -83,8 +91,7 @@ public readonly struct FrozenIntSet : IFrozenSet<int>, IFindItem<int>
     /// <returns>The index of the item, or -1 if the item was not found.</returns>
     int IFindItem<int>.FindItemIndex(int item)
     {
-        var hashCode = item;
-        _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
+        _hashTable.FindMatchingEntries(item, out var index, out var endIndex);
 
         while (index <= endIndex)
         {

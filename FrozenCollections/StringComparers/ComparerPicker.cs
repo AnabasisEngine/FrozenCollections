@@ -161,7 +161,7 @@ internal static class ComparerPicker
 
         foreach (var s in uniqueStrings)
         {
-            if (!IsAllAscii(s))
+            if (!IsAllAscii(s.AsSpan()))
             {
                 return new FullCaseInsensitiveStringComparer();
             }

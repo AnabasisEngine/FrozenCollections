@@ -28,6 +28,8 @@ public static class ComparerTests
             Count = 1
         };
 
+        Assert.False(c.CaseInsensitive);
+
         Equal(c, "a", "a", true);
         Equal(c, "a", "aa", false);
         Equal(c, "a", "ab", false);
@@ -64,6 +66,8 @@ public static class ComparerTests
             Count = 1
         };
 
+        Assert.False(c.CaseInsensitive);
+
         Equal(c, "a", "a", true);
         Equal(c, "a", "aa", false);
         Equal(c, "a", "ab", false);
@@ -89,6 +93,8 @@ public static class ComparerTests
             Index = 0,
             Count = 1
         };
+
+        Assert.True(c.CaseInsensitive);
 
         Equal(c, "a", "a", true);
         Equal(c, "a", "A", true);
@@ -120,6 +126,8 @@ public static class ComparerTests
             Count = 1
         };
 
+        Assert.True(c.CaseInsensitive);
+
         Equal(c, "a", "a", true);
         Equal(c, "a", "A", true);
         Equal(c, "a", "aa", false);
@@ -149,6 +157,8 @@ public static class ComparerTests
             Index = -1,
             Count = 1
         };
+
+        Assert.False(c.CaseInsensitive);
 
         Equal(c, "a", "a", true);
         Equal(c, "a", "aa", false);
@@ -182,6 +192,8 @@ public static class ComparerTests
             Count = 1
         };
 
+        Assert.False(c.CaseInsensitive);
+
         Equal(c, "a", "a", true);
         Equal(c, "a", "aa", false);
         Equal(c, "a", "ba", false);
@@ -205,6 +217,8 @@ public static class ComparerTests
             Index = -1,
             Count = 1
         };
+
+        Assert.True(c.CaseInsensitive);
 
         Equal(c, "a", "a", true);
         Equal(c, "a", "aa", false);
@@ -246,6 +260,8 @@ public static class ComparerTests
             Count = 1
         };
 
+        Assert.True(c.CaseInsensitive);
+
         Equal(c, "a", "a", true);
         Equal(c, "a", "aa", false);
         Equal(c, "a", "ba", false);
@@ -282,18 +298,30 @@ public static class ComparerTests
     {
         var c = new FullStringComparer();
 
+        Assert.False(c.CaseInsensitive);
+
         Equal(c, "", "", true);
         Equal(c, "A", "A", true);
         Equal(c, "AA", "AA", true);
 
         NotEqual(c, "A", "AA");
         NotEqual(c, "AA", "A");
+
+        c.MinLength = 1;
+        c.MaxLength = 3;
+        Assert.True(c.TrivialReject(string.Empty));
+        Assert.False(c.TrivialReject("1"));
+        Assert.False(c.TrivialReject("2"));
+        Assert.False(c.TrivialReject("3"));
+        Assert.True(c.TrivialReject("1234"));
     }
 
     [Fact]
     public static void FullCaseInsensitive()
     {
         var c = new FullCaseInsensitiveStringComparer();
+
+        Assert.True(c.CaseInsensitive);
 
         Equal(c, "", "", true);
         Equal(c, "A", "A", true);
@@ -310,6 +338,8 @@ public static class ComparerTests
     public static void FullCaseInsensitiveAscii()
     {
         var c = new FullCaseInsensitiveAsciiStringComparer();
+
+        Assert.True(c.CaseInsensitive);
 
         Equal(c, "", "", true);
         Equal(c, "A", "A", true);

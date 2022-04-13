@@ -8,7 +8,7 @@ using System.Linq;
 namespace FrozenCollections;
 
 /// <summary>
-/// A frozen dictionary.
+/// A frozen set.
 /// </summary>
 /// <typeparam name="T">The type of the items in the set.</typeparam>
 /// <remarks>
@@ -33,6 +33,12 @@ public readonly struct FrozenSet<T> : IFrozenSet<T>, IFindItem<T>
     private readonly T[] _items;
 
     /// <summary>
+    /// Gets an empty frozen set.
+    /// </summary>
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Usability is good in this case.")]
+    public static FrozenSet<T> Empty => default;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="FrozenSet{T}"/> struct.
     /// </summary>
     /// <param name="items">The items to initialize the set with.</param>
@@ -42,7 +48,7 @@ public readonly struct FrozenSet<T> : IFrozenSet<T>, IFindItem<T>
     {
         var incoming = new HashSet<T>(items, comparer).ToList();
 
-        _items = new T[incoming.Count];
+        _items = incoming.Count == 0 ? Array.Empty<T>() : new T[incoming.Count];
         Comparer = comparer;
 
         var it = _items;
@@ -56,36 +62,45 @@ public readonly struct FrozenSet<T> : IFrozenSet<T>, IFindItem<T>
     public FrozenList<T> Items => new(_items);
 
     /// <inheritdoc />
-    public Enumerator<T> GetEnumerator() => new(_items);
+    public FrozenEnumerator<T> GetEnumerator() => new(_items);
 
     /// <summary>
     /// Gets an enumeration of the set's items.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<T>.Instance.Enumerator;
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<T>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets an enumeration of the set's items.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<T>.Instance.Enumerator;
+    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<T>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets the number of items in the set.
     /// </summary>
-    public int Count => _items.Length;
+    public int Count => _hashTable.Count;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the comparer used by this set.
+    /// </summary>
+    public IEqualityComparer<T> Comparer { get; }
+
+    /// <summary>
+    /// Checks whether an item is present in the set.
+    /// </summary>
+    /// <param name="item">The item to probe for.</param>
+    /// <returns><see langword="true"/> if the item is in the set, <see langword="false"/> otherwise.</returns>
     public bool Contains(T item)
     {
-        var hashCode = Comparer.GetHashCode(item);
+        var hashCode = Comparer?.GetHashCode(item) ?? 0;
         _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
         while (index <= endIndex)
         {
             if (hashCode == _hashTable.EntryHashCode(index))
             {
-                if (Comparer.Equals(item, _items[index]))
+                if (Comparer!.Equals(item, _items[index]))
                 {
                     return true;
                 }
@@ -104,14 +119,14 @@ public readonly struct FrozenSet<T> : IFrozenSet<T>, IFindItem<T>
     /// <returns>The index of the item, or -1 if the item was not found.</returns>
     int IFindItem<T>.FindItemIndex(T item)
     {
-        var hashCode = Comparer.GetHashCode(item);
+        var hashCode = Comparer?.GetHashCode(item) ?? 0;
         _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
         while (index <= endIndex)
         {
             if (hashCode == _hashTable.EntryHashCode(index))
             {
-                if (Comparer.Equals(item, _items[index]))
+                if (Comparer!.Equals(item, _items[index]))
                 {
                     return index;
                 }
@@ -122,11 +137,6 @@ public readonly struct FrozenSet<T> : IFrozenSet<T>, IFindItem<T>
 
         return -1;
     }
-
-    /// <summary>
-    /// Gets the comparer used by this set.
-    /// </summary>
-    public IEqualityComparer<T> Comparer { get; }
 
     /// <summary>
     /// Determines whether this set is a proper subset of the specified collection.

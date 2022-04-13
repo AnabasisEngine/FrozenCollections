@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -20,6 +21,12 @@ namespace FrozenCollections;
 public readonly struct FrozenList<T> : IReadOnlyList<T>
 {
     private readonly T[] _items;
+
+    /// <summary>
+    /// Gets an empty frozen list.
+    /// </summary>
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Usability is good in this case.")]
+    public static FrozenList<T> Empty { get; } = Array.Empty<T>().ToFrozenList();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FrozenList{T}"/> struct.
@@ -56,17 +63,17 @@ public readonly struct FrozenList<T> : IReadOnlyList<T>
     /// <returns>
     /// An enumerator that can be used to iterate through the list.
     /// </returns>
-    public Enumerator<T> GetEnumerator() => new(_items);
+    public FrozenEnumerator<T> GetEnumerator() => new(_items);
 
     /// <summary>
     /// Gets an enumeration of this list's items.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<T>.Instance.Enumerator;
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<T>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets an enumeration of this list's items.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<T>.Instance.Enumerator;
+    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<T>.Instance.GetEnumerator();
 }

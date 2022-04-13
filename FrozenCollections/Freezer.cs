@@ -27,10 +27,10 @@ public static class Freezer
     /// Tf the same key appears multiple times in the input, the latter one in the sequence takes precedence.
     /// </remarks>
     /// <returns>A frozen dictionary.</returns>
-    public static FrozenDictionary<TKey, TValue> Freeze<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> pairs, IEqualityComparer<TKey>? comparer = null)
+    public static FrozenDictionary<TKey, TValue> ToFrozenDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>>? pairs, IEqualityComparer<TKey>? comparer = null)
         where TKey : notnull
     {
-        return new FrozenDictionary<TKey, TValue>(pairs, comparer ?? EqualityComparer<TKey>.Default);
+        return new FrozenDictionary<TKey, TValue>(pairs ?? Array.Empty<KeyValuePair<TKey, TValue>>(), comparer ?? EqualityComparer<TKey>.Default);
     }
 
     /// <summary>
@@ -43,9 +43,9 @@ public static class Freezer
     /// Tf the same key appears multiple times in the input, the latter one in the sequence takes precedence.
     /// </remarks>
     /// <returns>A frozen dictionary.</returns>
-    public static FrozenIntDictionary<TValue> Freeze<TValue>(this IEnumerable<KeyValuePair<int, TValue>> pairs)
+    public static FrozenIntDictionary<TValue> ToFrozenDictionary<TValue>(this IEnumerable<KeyValuePair<int, TValue>>? pairs)
     {
-        return new FrozenIntDictionary<TValue>(pairs);
+        return new FrozenIntDictionary<TValue>(pairs ?? Array.Empty<KeyValuePair<int, TValue>>());
     }
 
     /// <summary>
@@ -59,9 +59,10 @@ public static class Freezer
     /// Tf the same key appears multiple times in the input, the latter one in the sequence takes precedence.
     /// </remarks>
     /// <returns>A frozen dictionary.</returns>
-    public static FrozenOrdinalStringDictionary<TValue> Freeze<TValue>(this IEnumerable<KeyValuePair<string, TValue>> pairs, bool ignoreCase = false)
+    public static FrozenOrdinalStringDictionary<TValue> ToFrozenDictionary<TValue>(this IEnumerable<KeyValuePair<string, TValue>>? pairs, bool ignoreCase = false)
     {
-        return new FrozenOrdinalStringDictionary<TValue>(pairs, ignoreCase);
+        return new FrozenOrdinalStringDictionary<TValue>(pairs ?? Array.Empty<KeyValuePair<string, TValue>>(), ignoreCase);
+        ;
     }
 
     /// <summary>
@@ -72,10 +73,10 @@ public static class Freezer
     /// <typeparam name="T">The type of the items in the set.</typeparam>
     /// <exception cref="ArgumentException">If more than 64K items are added.</exception>
     /// <returns>A frozen set.</returns>
-    public static FrozenSet<T> Freeze<T>(this IEnumerable<T> items, IEqualityComparer<T>? comparer = null)
+    public static FrozenSet<T> ToFrozenSet<T>(this IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
         where T : notnull
     {
-        return new FrozenSet<T>(items, comparer ?? EqualityComparer<T>.Default);
+        return new FrozenSet<T>(items ?? Array.Empty<T>(), comparer ?? EqualityComparer<T>.Default);
     }
 
     /// <summary>
@@ -84,9 +85,9 @@ public static class Freezer
     /// <param name="items">The items to initialize the set with.</param>
     /// <exception cref="ArgumentException">If more than 64K items are added.</exception>
     /// <returns>A frozen set.</returns>
-    public static FrozenIntSet Freeze(this IEnumerable<int> items)
+    public static FrozenIntSet ToFrozenSet(this IEnumerable<int>? items)
     {
-        return new FrozenIntSet(items);
+        return new FrozenIntSet(items ?? Array.Empty<int>());
     }
 
     /// <summary>
@@ -96,9 +97,9 @@ public static class Freezer
     /// <param name="ignoreCase">Whether to use case-insensitive semantics.</param>
     /// <exception cref="ArgumentException">If more than 64K items are added.</exception>
     /// <returns>A frozen set.</returns>
-    public static FrozenOrdinalStringSet Freeze(this IEnumerable<string> items, bool ignoreCase = false)
+    public static FrozenOrdinalStringSet ToFrozenSet(this IEnumerable<string>? items, bool ignoreCase = false)
     {
-        return new FrozenOrdinalStringSet(items, ignoreCase);
+        return new FrozenOrdinalStringSet(items ?? Array.Empty<string>(), ignoreCase);
     }
 
     /// <summary>
@@ -107,9 +108,8 @@ public static class Freezer
     /// <param name="items">The items to initialize the list with.</param>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <returns>A frozen list.</returns>
-    public static FrozenList<T> FreezeAsList<T>(this IEnumerable<T> items)
-        where T : notnull
+    public static FrozenList<T> ToFrozenList<T>(this IEnumerable<T>? items)
     {
-        return new FrozenList<T>(items);
+        return new FrozenList<T>(items ?? Array.Empty<T>());
     }
 }

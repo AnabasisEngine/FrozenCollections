@@ -18,4 +18,5 @@ internal sealed class LeftHandCaseInsensitiveStringComparer : PartialStringCompa
     public override bool Equals(string? x, string? y) => x.AsSpan(Index, Count).Equals(y.AsSpan(Index, Count), StringComparison.OrdinalIgnoreCase);
     public override bool EqualsFullLength(string x, string y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
     public override int GetHashCode(string s) => Hashing.GetCaseInsensitiveHashCode(s.AsSpan(Index, Count));
+    public override bool CaseInsensitive => true;
 }

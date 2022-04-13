@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Xunit;
 
@@ -23,7 +24,7 @@ public static class FrozenDictionaryTests
             d.Add(i, $"V{i}");
         }
 
-        var fd = d.Freeze(comparer);
+        var fd = d.ToFrozenDictionary(comparer);
         Assert.Equal(d.Count, fd.Count);
 
         foreach (var kvp in d)
@@ -62,7 +63,7 @@ public static class FrozenDictionaryTests
         s.Clear();
         foreach (var o in (IEnumerable)fd)
         {
-            var kvp = (KeyValuePair<long, string>)o;
+            var kvp = (KeyValuePair<long, string>)o!;
             Assert.True(d.ContainsKey(kvp.Key));
             Assert.True(d.TryGetValue(kvp.Key, out var value));
             Assert.Equal(kvp.Value, value);
@@ -124,7 +125,7 @@ public static class FrozenDictionaryTests
     public static void Empty()
     {
         var d = new Dictionary<long, string>();
-        var fd = d.Freeze();
+        var fd = d.ToFrozenDictionary();
 
         Assert.Empty(fd);
         Assert.False(((IEnumerable<KeyValuePair<long, string>>)fd).GetEnumerator().MoveNext());
@@ -145,12 +146,15 @@ public static class FrozenDictionaryTests
     public static void PairEnumerator()
     {
         var d = new Dictionary<string, int>();
-        var fd = d.Freeze();
+        var fd = d.ToFrozenDictionary();
         var e = fd.GetEnumerator();
+
         Assert.Throws<InvalidOperationException>(() => e.Current);
+
         d.Add("One", 1);
-        fd = d.Freeze();
+        fd = d.ToFrozenDictionary();
         e = fd.GetEnumerator();
+
         var e2 = (IEnumerator<KeyValuePair<string, int>>)e;
         Assert.True(e2.MoveNext());
         Assert.Equal("One", e2.Current.Key);

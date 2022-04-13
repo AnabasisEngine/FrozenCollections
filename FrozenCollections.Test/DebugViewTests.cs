@@ -1,6 +1,4 @@
-﻿// © Microsoft Corporation. All rights reserved.
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Xunit;
 
 namespace FrozenCollections.Test;
@@ -15,7 +13,7 @@ public static class DebugViewTests
             { "One", 1 },
             { "Two", 2 },
         };
-        var fd = d.Freeze();
+        var fd = d.ToFrozenDictionary();
         var dv = new IFrozenDictionaryDebugView<string, int>(fd);
         var items = dv.Items;
 
@@ -38,7 +36,7 @@ public static class DebugViewTests
             2,
         };
 
-        var fl = l.FreezeAsList();
+        var fl = l.ToFrozenList();
         var dv = new IReadOnlyCollectionDebugView<int>(fl);
         var items = dv.Items;
 

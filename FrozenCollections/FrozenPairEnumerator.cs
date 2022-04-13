@@ -5,24 +5,27 @@ using System.Collections.Generic;
 namespace FrozenCollections;
 
 /// <summary>
-/// Enumerates the entries of a set.
+/// Enumerates the key/value pairs of a dictionary.
 /// </summary>
-/// <typeparam name="T">The types of the set's entries.</typeparam>
-public struct Enumerator<T> : IEnumerator<T>
+/// <typeparam name="TKey">The types of the dictionary's keys.</typeparam>
+/// <typeparam name="TValue">The types of the dictionary's values.</typeparam>
+public struct FrozenPairEnumerator<TKey, TValue> : IEnumerator<KeyValuePair<TKey, TValue>>
 {
-    private readonly T[] _entries;
+    private readonly TKey[] _keys;
+    private readonly TValue[] _values;
     private int _index;
 
-    internal Enumerator(T[] entries)
+    internal FrozenPairEnumerator(TKey[] keys, TValue[] values)
     {
-        _entries = entries;
+        _keys = keys;
+        _values = values;
         _index = -1;
     }
 
     /// <summary>
-    /// Gets the entry at the current position of the enumerator.
+    /// Gets the key/value pair at the current position of the enumerator.
     /// </summary>
-    public T Current
+    public KeyValuePair<TKey, TValue> Current
     {
         get
         {
@@ -31,12 +34,12 @@ public struct Enumerator<T> : IEnumerator<T>
                 throw new InvalidOperationException();
             }
 
-            return _entries[_index];
+            return new KeyValuePair<TKey, TValue>(_keys[_index], _values[_index]);
         }
     }
 
     /// <summary>
-    /// Dispose this object.
+    /// Disposes the object.
     /// </summary>
     void IDisposable.Dispose()
     {
@@ -49,7 +52,7 @@ public struct Enumerator<T> : IEnumerator<T>
     /// <returns><see langword="true" /> if the enumerator was successfully advanced to the next pair; <see langword="false" /> if the enumerator has passed the end of the dictionary.</returns>
     public bool MoveNext()
     {
-        if (_index < _entries.Length - 1)
+        if (_index < _keys.Length - 1)
         {
             _index++;
             return true;
@@ -59,12 +62,12 @@ public struct Enumerator<T> : IEnumerator<T>
     }
 
     /// <summary>
-    /// Resets the enumerator to being enumeration anew.
+    /// Resets the enumerator to its initial state.
     /// </summary>
     void IEnumerator.Reset() => _index = -1;
 
     /// <summary>
     /// Gets the current value held by the enumerator.
     /// </summary>
-    object IEnumerator.Current => Current!;
+    object IEnumerator.Current => Current;
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,7 +33,12 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
     private readonly FrozenHashTable _hashTable;
     private readonly TKey[] _keys;
     private readonly TValue[] _values;
-    private readonly IEqualityComparer<TKey> _comparer;
+
+    /// <summary>
+    /// Gets an empty frozen dictionary.
+    /// </summary>
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Usability is good in this case.")]
+    public static FrozenDictionary<TKey, TValue> Empty => default;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FrozenDictionary{TKey, TValue}"/> struct.
@@ -46,21 +51,31 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
     /// </remarks>
     internal FrozenDictionary(IEnumerable<KeyValuePair<TKey, TValue>> pairs, IEqualityComparer<TKey> comparer)
     {
+#if NETCOREAPP3_1_OR_GREATER
         var incoming = new Dictionary<TKey, TValue>(pairs, comparer).ToList();
+#else
+        var d = new Dictionary<TKey, TValue>(comparer);
+        foreach (var pair in pairs)
+        {
+            d[pair.Key] = pair.Value;
+        }
 
-        _keys = new TKey[incoming.Count];
-        _values = new TValue[incoming.Count];
-        _comparer = comparer;
+        var incoming = d.ToList();
+#endif
+
+        _keys = incoming.Count == 0 ? Array.Empty<TKey>() : new TKey[incoming.Count];
+        _values = incoming.Count == 0 ? Array.Empty<TValue>() : new TValue[incoming.Count];
+        Comparer = comparer;
 
         var keys = _keys;
         var values = _values;
         _hashTable = FrozenHashTable.Create(
             incoming,
-            item => comparer.GetHashCode(item.Key),
-            (index, item) =>
+            pair => comparer.GetHashCode(pair.Key),
+            (index, pair) =>
             {
-                keys[index] = item.Key;
-                values[index] = item.Value;
+                keys[index] = pair.Key;
+                values[index] = pair.Value;
             });
     }
 
@@ -71,7 +86,7 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
     public FrozenList<TValue> Values => new(_values);
 
     /// <inheritdoc />
-    public PairEnumerator<TKey, TValue> GetEnumerator() => new(_keys, _values);
+    public FrozenPairEnumerator<TKey, TValue> GetEnumerator() => new(_keys, _values);
 
     /// <summary>
     /// Gets an enumeration of the dictionary's keys.
@@ -87,32 +102,43 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
     /// Gets an enumeration of the dictionary's key/value pairs.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<KeyValuePair<TKey, TValue>>.Instance.Enumerator;
+    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
+        => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<KeyValuePair<TKey, TValue>>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets an enumeration of the dictionary's key/value pairs.
     /// </summary>
     /// <returns>The enumerator.</returns>
-    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<KeyValuePair<TKey, TValue>>.Instance.Enumerator;
+    IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<KeyValuePair<TKey, TValue>>.Instance.GetEnumerator();
 
     /// <summary>
     /// Gets the number of key/value pairs in the dictionary.
     /// </summary>
-    public int Count => _keys.Length;
+    public int Count => _hashTable.Count;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the comparer used by this dictionary.
+    /// </summary>
+    public IEqualityComparer<TKey> Comparer { get; }
+
+    /// <summary>
+    /// Gets the value associated to the given key.
+    /// </summary>
+    /// <param name="key">The key to lookup.</param>
+    /// <returns>The associated value.</returns>
+    /// <exception cref="KeyNotFoundException">If the key doesn't exist in the dictionary.</exception>
     public TValue this[TKey key]
     {
         get
         {
-            var hashCode = _comparer.GetHashCode(key);
+            var hashCode = Comparer.GetHashCode(key);
             _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
             while (index <= endIndex)
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (_comparer.Equals(key, _keys[index]))
+                    if (Comparer.Equals(key, _keys[index]))
                     {
                         return _values[index];
                     }
@@ -125,17 +151,21 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Checks whether a particular key exists in the dictionary.
+    /// </summary>
+    /// <param name="key">The key to probe for.</param>
+    /// <returns><see langword="true"/> if the key is in the dictionary, otherwise <see langword="false"/>.</returns>
     public bool ContainsKey(TKey key)
     {
-        var hashCode = _comparer.GetHashCode(key);
+        var hashCode = Comparer?.GetHashCode(key) ?? 0;
         _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
         while (index <= endIndex)
         {
             if (hashCode == _hashTable.EntryHashCode(index))
             {
-                if (_comparer.Equals(key, _keys[index]))
+                if (Comparer!.Equals(key, _keys[index]))
                 {
                     return true;
                 }
@@ -147,17 +177,26 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
         return false;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Tries to get a value associated with a specific key.
+    /// </summary>
+    /// <param name="key">The key to lookup.</param>
+    /// <param name="value">The value associated with the key.</param>
+    /// <returns><see langword="true"/> if the key was found, otherwise <see langword="false"/>.</returns>
+#if NETCOREAPP3_1_OR_GREATER
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
+#else
+    public bool TryGetValue(TKey key, out TValue value)
+#endif
     {
-        var hashCode = _comparer.GetHashCode(key);
+        var hashCode = Comparer?.GetHashCode(key) ?? 0;
         _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
         while (index <= endIndex)
         {
             if (hashCode == _hashTable.EntryHashCode(index))
             {
-                if (_comparer.Equals(key, _keys[index]))
+                if (Comparer!.Equals(key, _keys[index]))
                 {
                     value = _values[index];
                     return true;
@@ -167,21 +206,21 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
             index++;
         }
 
-        value = default;
+        value = default!;
         return false;
     }
 
     /// <inheritdoc />
     public ref readonly TValue GetByRef(TKey key)
     {
-        var hashCode = _comparer.GetHashCode(key);
+        var hashCode = Comparer?.GetHashCode(key) ?? 0;
         _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
         while (index <= endIndex)
         {
             if (hashCode == _hashTable.EntryHashCode(index))
             {
-                if (_comparer.Equals(key, _keys[index]))
+                if (Comparer!.Equals(key, _keys[index]))
                 {
                     return ref _values[index];
                 }
