@@ -51,9 +51,6 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
     /// </remarks>
     internal FrozenDictionary(IEnumerable<KeyValuePair<TKey, TValue>> pairs, IEqualityComparer<TKey> comparer)
     {
-#if NETCOREAPP3_1_OR_GREATER
-        var incoming = new Dictionary<TKey, TValue>(pairs, comparer).ToList();
-#else
         var d = new Dictionary<TKey, TValue>(comparer);
         foreach (var pair in pairs)
         {
@@ -61,7 +58,15 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
         }
 
         var incoming = d.ToList();
-#endif
+
+        if (object.ReferenceEquals(comparer, StringComparer.OrdinalIgnoreCase))
+        {
+            comparer = (IEqualityComparer<TKey>)StringComparers.ComparerPicker.Pick(incoming.Select(x => (string)((object)x.Key)).ToList(), true);
+        }
+        else if (object.ReferenceEquals(comparer, StringComparer.Ordinal))
+        {
+            comparer = (IEqualityComparer<TKey>)StringComparers.ComparerPicker.Pick(incoming.Select(x => (string)((object)x.Key)).ToList(), false);
+        }
 
         _keys = incoming.Count == 0 ? Array.Empty<TKey>() : new TKey[incoming.Count];
         _values = incoming.Count == 0 ? Array.Empty<TValue>() : new TValue[incoming.Count];
@@ -131,14 +136,14 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
     {
         get
         {
-            var hashCode = Comparer.GetHashCode(key);
+            var hashCode = Comparer?.GetHashCode(key) ?? 0;
             _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
             while (index <= endIndex)
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (Comparer.Equals(key, _keys[index]))
+                    if (Comparer!.Equals(key, _keys[index]))
                     {
                         return _values[index];
                     }
@@ -230,5 +235,27 @@ public readonly struct FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, 
         }
 
         throw new KeyNotFoundException();
+    }
+
+    /// <inheritdoc />
+    public ref readonly TValue TryGetByRef(TKey key)
+    {
+        var hashCode = Comparer?.GetHashCode(key) ?? 0;
+        _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
+
+        while (index <= endIndex)
+        {
+            if (hashCode == _hashTable.EntryHashCode(index))
+            {
+                if (Comparer!.Equals(key, _keys[index]))
+                {
+                    return ref _values[index];
+                }
+            }
+
+            index++;
+        }
+
+        return ref ByReference.Null<TValue>();
     }
 }

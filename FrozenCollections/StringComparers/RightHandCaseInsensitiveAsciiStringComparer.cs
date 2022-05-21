@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace FrozenCollections.StringComparers;
 
@@ -13,10 +12,10 @@ namespace FrozenCollections.StringComparers;
 /// the data is always valid. This is ensured by precondition checks before
 /// a key is used to perform a dictionary lookup.
 /// </remarks>
-internal sealed class RightHandCaseInsensitiveAsciiStringComparer : PartialStringComparerBase, IEqualityComparer<string>
+internal sealed class RightHandCaseInsensitiveAsciiStringComparer : PartialStringComparerBase
 {
-    public override bool Equals(string? x, string? y) => x.AsSpan(x!.Length + Index, Count).Equals(y.AsSpan(y!.Length + Index, Count), StringComparison.OrdinalIgnoreCase);
-    public override bool EqualsFullLength(string x, string y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
+    public override bool Equals(string? x, string? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
+    public override bool EqualsPartial(string? x, string? y) => x.AsSpan(x!.Length + Index, Count).Equals(y.AsSpan(y!.Length + Index, Count), StringComparison.OrdinalIgnoreCase);
     public override int GetHashCode(string s) => Hashing.GetCaseInsensitiveAsciiHashCode(s.AsSpan(s.Length + Index, Count));
     public override bool CaseInsensitive => true;
 }

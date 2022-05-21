@@ -27,10 +27,34 @@ public static class Freezer
     /// Tf the same key appears multiple times in the input, the latter one in the sequence takes precedence.
     /// </remarks>
     /// <returns>A frozen dictionary.</returns>
-    public static FrozenDictionary<TKey, TValue> ToFrozenDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>>? pairs, IEqualityComparer<TKey>? comparer = null)
+    public static FrozenDictionary<TKey, TValue> ToFrozenDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>>? pairs, IEqualityComparer<TKey> comparer)
         where TKey : notnull
     {
-        return new FrozenDictionary<TKey, TValue>(pairs ?? Array.Empty<KeyValuePair<TKey, TValue>>(), comparer ?? EqualityComparer<TKey>.Default);
+        return new FrozenDictionary<TKey, TValue>(pairs ?? Array.Empty<KeyValuePair<TKey, TValue>>(), comparer);
+    }
+
+    /// <summary>
+    /// Initializes a new dictionary with the given set of key/value pairs.
+    /// </summary>
+    /// <param name="pairs">The pairs to initialize the dictionary with.</param>
+    /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+    /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+    /// <exception cref="ArgumentException">If more than 64K pairs are added.</exception>
+    /// <remarks>
+    /// Tf the same key appears multiple times in the input, the latter one in the sequence takes precedence.
+    ///
+    /// If your dictionary's keys are strings compared using ordinal string comparison, you should be using the
+    /// <see cref="ToFrozenDictionary{TValue}(IEnumerable{KeyValuePair{string, TValue}}?, bool)"/> overload instead
+    /// as it will give you a specialized dictionary which delivers higher performance for ordinal string keys.
+    ///
+    /// If your dictionary's keys are integers, you should be using the <see cref="ToFrozenDictionary{TValue}(IEnumerable{KeyValuePair{int, TValue}}?)"/>
+    /// overload instead, also for higher performance.
+    /// </remarks>
+    /// <returns>A frozen dictionary.</returns>
+    public static FrozenDictionary<TKey, TValue> ToFrozenDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>>? pairs)
+        where TKey : notnull
+    {
+        return new FrozenDictionary<TKey, TValue>(pairs ?? Array.Empty<KeyValuePair<TKey, TValue>>(), EqualityComparer<TKey>.Default);
     }
 
     /// <summary>
@@ -59,24 +83,59 @@ public static class Freezer
     /// Tf the same key appears multiple times in the input, the latter one in the sequence takes precedence.
     /// </remarks>
     /// <returns>A frozen dictionary.</returns>
-    public static FrozenOrdinalStringDictionary<TValue> ToFrozenDictionary<TValue>(this IEnumerable<KeyValuePair<string, TValue>>? pairs, bool ignoreCase = false)
+    public static FrozenOrdinalStringDictionary<TValue> ToFrozenDictionary<TValue>(this IEnumerable<KeyValuePair<string, TValue>>? pairs, bool ignoreCase)
     {
         return new FrozenOrdinalStringDictionary<TValue>(pairs ?? Array.Empty<KeyValuePair<string, TValue>>(), ignoreCase);
-        ;
+    }
+
+    /// <summary>
+    /// Initializes a new dictionary with the given set of key/value pairs using case-sensitive ordinal string comparison.
+    /// </summary>
+    /// <param name="pairs">The pairs to initialize the dictionary with.</param>
+    /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+    /// <exception cref="ArgumentException">If more than 64K pairs are added.</exception>
+    /// <remarks>
+    /// Tf the same key appears multiple times in the input, the latter one in the sequence takes precedence.
+    /// </remarks>
+    /// <returns>A frozen dictionary.</returns>
+    public static FrozenOrdinalStringDictionary<TValue> ToFrozenDictionary<TValue>(this IEnumerable<KeyValuePair<string, TValue>>? pairs)
+    {
+        return new FrozenOrdinalStringDictionary<TValue>(pairs ?? Array.Empty<KeyValuePair<string, TValue>>(), false);
     }
 
     /// <summary>
     /// Initializes a new set with the given items.
     /// </summary>
     /// <param name="items">The items to initialize the set with.</param>
-    /// <param name="comparer">The comparer used to compare and hash items. If this is null, then <see cref="EqualityComparer{T}.Default"/> is used.</param>
+    /// <param name="comparer">The comparer used to compare and hash items.</param>
     /// <typeparam name="T">The type of the items in the set.</typeparam>
     /// <exception cref="ArgumentException">If more than 64K items are added.</exception>
     /// <returns>A frozen set.</returns>
-    public static FrozenSet<T> ToFrozenSet<T>(this IEnumerable<T>? items, IEqualityComparer<T>? comparer = null)
+    public static FrozenSet<T> ToFrozenSet<T>(this IEnumerable<T>? items, IEqualityComparer<T> comparer)
         where T : notnull
     {
-        return new FrozenSet<T>(items ?? Array.Empty<T>(), comparer ?? EqualityComparer<T>.Default);
+        return new FrozenSet<T>(items ?? Array.Empty<T>(), comparer);
+    }
+
+    /// <summary>
+    /// Initializes a new set with the given items.
+    /// </summary>
+    /// <param name="items">The items to initialize the set with.</param>
+    /// <typeparam name="T">The type of the items in the set.</typeparam>
+    /// <exception cref="ArgumentException">If more than 64K items are added.</exception>
+    /// <remarks>
+    /// If your set's items are strings compared using ordinal string comparison, you should be using the
+    /// <see cref="ToFrozenSet(IEnumerable{string}?, bool)"/> overload instead
+    /// as it will give you a specialized set which delivers higher performance for ordinal string items.
+    ///
+    /// If your set's items are integers, you should be using the <see cref="ToFrozenSet(IEnumerable{int}?)" />
+    /// overload instead, also for higher performance.
+    /// </remarks>
+    /// <returns>A frozen set.</returns>
+    public static FrozenSet<T> ToFrozenSet<T>(this IEnumerable<T>? items)
+        where T : notnull
+    {
+        return new FrozenSet<T>(items ?? Array.Empty<T>(), EqualityComparer<T>.Default);
     }
 
     /// <summary>
@@ -97,9 +156,20 @@ public static class Freezer
     /// <param name="ignoreCase">Whether to use case-insensitive semantics.</param>
     /// <exception cref="ArgumentException">If more than 64K items are added.</exception>
     /// <returns>A frozen set.</returns>
-    public static FrozenOrdinalStringSet ToFrozenSet(this IEnumerable<string>? items, bool ignoreCase = false)
+    public static FrozenOrdinalStringSet ToFrozenSet(this IEnumerable<string>? items, bool ignoreCase)
     {
         return new FrozenOrdinalStringSet(items ?? Array.Empty<string>(), ignoreCase);
+    }
+
+    /// <summary>
+    /// Initializes a new set with the given items.
+    /// </summary>
+    /// <param name="items">The items to initialize the set with.</param>
+    /// <exception cref="ArgumentException">If more than 64K items are added.</exception>
+    /// <returns>A frozen set.</returns>
+    public static FrozenOrdinalStringSet ToFrozenSet(this IEnumerable<string>? items)
+    {
+        return new FrozenOrdinalStringSet(items ?? Array.Empty<string>());
     }
 
     /// <summary>

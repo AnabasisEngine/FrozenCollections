@@ -18,7 +18,7 @@ namespace FrozenCollections;
 /// where a dictionary is created at startup of an application and used throughout the life
 /// of the application.
 /// </remarks>
-[DebuggerTypeProxy(typeof(IFrozenDictionaryDebugView<,>))]
+[DebuggerTypeProxy(typeof(IFrozenIntDictionaryDebugView<>))]
 [DebuggerDisplay("Count = {Count}")]
 [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Not appropriate for this type")]
 public readonly struct FrozenIntDictionary<TValue> : IFrozenDictionary<int, TValue>
@@ -42,9 +42,6 @@ public readonly struct FrozenIntDictionary<TValue> : IFrozenDictionary<int, TVal
     /// </remarks>
     internal FrozenIntDictionary(IEnumerable<KeyValuePair<int, TValue>> pairs)
     {
-#if NETCOREAPP3_1_OR_GREATER
-        var incoming = new Dictionary<int, TValue>(pairs).ToList();
-#else
         var d = new Dictionary<int, TValue>();
         foreach (var pair in pairs)
         {
@@ -52,7 +49,6 @@ public readonly struct FrozenIntDictionary<TValue> : IFrozenDictionary<int, TVal
         }
 
         var incoming = d.ToList();
-#endif
 
         _values = incoming.Count == 0 ? Array.Empty<TValue>() : new TValue[incoming.Count];
 
@@ -193,5 +189,23 @@ public readonly struct FrozenIntDictionary<TValue> : IFrozenDictionary<int, TVal
         }
 
         throw new KeyNotFoundException();
+    }
+
+    /// <inheritdoc />
+    public ref readonly TValue TryGetByRef(int key)
+    {
+        _hashTable.FindMatchingEntries(key, out var index, out var endIndex);
+
+        while (index <= endIndex)
+        {
+            if (key == _hashTable.EntryHashCode(index))
+            {
+                return ref _values[index];
+            }
+
+            index++;
+        }
+
+        return ref ByReference.Null<TValue>();
     }
 }

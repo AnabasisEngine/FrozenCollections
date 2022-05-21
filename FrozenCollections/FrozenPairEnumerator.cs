@@ -25,16 +25,16 @@ public struct FrozenPairEnumerator<TKey, TValue> : IEnumerator<KeyValuePair<TKey
     /// <summary>
     /// Gets the key/value pair at the current position of the enumerator.
     /// </summary>
-    public KeyValuePair<TKey, TValue> Current
+    public readonly KeyValuePair<TKey, TValue> Current
     {
         get
         {
-            if (_index < 0)
+            if (_index >= 0)
             {
-                throw new InvalidOperationException();
+                return new KeyValuePair<TKey, TValue>(_keys[_index], _values[_index]);
             }
 
-            return new KeyValuePair<TKey, TValue>(_keys[_index], _values[_index]);
+            return Throw();
         }
     }
 
@@ -70,4 +70,10 @@ public struct FrozenPairEnumerator<TKey, TValue> : IEnumerator<KeyValuePair<TKey
     /// Gets the current value held by the enumerator.
     /// </summary>
     object IEnumerator.Current => Current;
+
+    // keep this separate to allow inlining of the Current property
+    private static KeyValuePair<TKey, TValue> Throw()
+    {
+        throw new InvalidOperationException("Call MoveNext() before reading the Current property.");
+    }
 }

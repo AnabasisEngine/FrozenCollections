@@ -24,7 +24,7 @@ public static class FrozenSetTests
             s.Add(i);
         }
 
-        var fs = s.ToFrozenSet(comparer);
+        var fs = comparer == null ? s.ToFrozenSet() : s.ToFrozenSet(comparer);
         Assert.Equal(s.Count, fs.Count);
 
         foreach (var v in s)
@@ -170,6 +170,24 @@ public static class FrozenSetTests
             Assert.Equal(s.Overlaps(other4), fs.Overlaps(other4));
             Assert.Equal(s.SetEquals(other4), fs.SetEquals(other4));
         }
+    }
+
+    [Fact]
+    public static void SpecialComparers()
+    {
+        var a = new[]
+        {
+            "abcd",
+            "ABCD",
+        };
+
+        var fs = a.ToFrozenSet(StringComparer.Ordinal);
+        Assert.Equal(typeof(StringComparers.LeftHandSingleCharStringComparer), fs.Comparer.GetType());
+        Assert.Equal(2, fs.Count);
+
+        fs = a.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+        Assert.Equal(typeof(StringComparers.LeftHandCaseInsensitiveAsciiStringComparer), fs.Comparer.GetType());
+        Assert.Single(fs);
     }
 
     private sealed class CustomSet : IReadOnlySet<long>

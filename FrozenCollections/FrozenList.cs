@@ -58,6 +58,12 @@ public readonly struct FrozenList<T> : IReadOnlyList<T>
     public int Count => _items.Length;
 
     /// <summary>
+    /// Gets a span of the items in the list.
+    /// </summary>
+    /// <returns>The span of items.</returns>
+    public ReadOnlySpan<T> AsSpan() => _items.AsSpan();
+
+    /// <summary>
     /// Returns an enumerator that iterates through the list.
     /// </summary>
     /// <returns>

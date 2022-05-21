@@ -27,6 +27,7 @@ public static class FrozenIntDictionaryTests
             Assert.Equal(kvp.Value, value);
             Assert.Equal(kvp.Value, fd[kvp.Key]);
             Assert.Equal(kvp.Value, fd.GetByRef(kvp.Key));
+            Assert.Equal(kvp.Value, fd.TryGetByRef(kvp.Key));
         }
 
         var s = new HashSet<int>();
@@ -112,6 +113,23 @@ public static class FrozenIntDictionaryTests
         Assert.False(fd.TryGetValue(-1, out _));
         Assert.Throws<KeyNotFoundException>(() => fd[-1]);
         Assert.Throws<KeyNotFoundException>(() => fd.GetByRef(-1));
+        Assert.True(ByReference.IsNull(fd.TryGetByRef(-1)));
+    }
+
+    [Fact]
+    public static void LastWins()
+    {
+        var a = new[]
+        {
+            new KeyValuePair<int, string>(0, "Zero"),
+            new KeyValuePair<int, string>(1, "One"),
+            new KeyValuePair<int, string>(0, "Zero Repeat"),
+            new KeyValuePair<int, string>(1, "One Repeat"),
+        };
+
+        var fd = a.ToFrozenDictionary();
+        Assert.Equal("Zero Repeat", fd[0]);
+        Assert.Equal("One Repeat", fd[1]);
     }
 
     [Fact]
@@ -133,5 +151,6 @@ public static class FrozenIntDictionaryTests
         Assert.False(fd.TryGetValue(-1, out _));
         Assert.Throws<KeyNotFoundException>(() => fd[-1]);
         Assert.Throws<KeyNotFoundException>(() => fd.GetByRef(-1));
+        Assert.True(ByReference.IsNull(fd.TryGetByRef(-1)));
     }
 }

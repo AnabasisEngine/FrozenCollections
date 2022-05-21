@@ -15,7 +15,6 @@ namespace FrozenCollections.StringComparers;
 [SuppressMessage("Globalization", "CA1309:Use ordinal string comparison", Justification = "This is a teeny bit faster")]
 internal sealed class FullStringComparer : StringComparerBase
 {
-    public override bool Equals(string x, string y) => string.Equals(x, y);
-    public override bool EqualsFullLength(string x, string y) => string.Equals(x, y);
+    public override bool Equals(string? x, string? y) => string.Equals(x, y);
     public override int GetHashCode(string s) => Hashing.GetHashCode(s.AsSpan());
 }

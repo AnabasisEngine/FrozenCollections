@@ -278,6 +278,36 @@ public class Program
         }
     }
 
+    [Benchmark]
+    public void Substrate_NormalDictionary()
+    {
+        var keys = SampleData.ClassicDictionary.Keys;
+        foreach (string key in keys)
+        {
+            var wellKnownAppName = SampleData.ClassicDictionary[key];
+        }
+    }
+
+    [Benchmark]
+    public void Substrate_FrozenDictionary()
+    {
+        var keys = SampleData.FrozenDict.Keys;
+        foreach (string key in keys)
+        {
+            var wellKnownAppName = SampleData.FrozenDict[key];
+        }
+    }
+
+    [Benchmark]
+    public void Substrate_FrozenOrdinalStringDictionary()
+    {
+        var keys = SampleData.FrozenOrdinalStringDict.Keys;
+        foreach (string key in keys)
+        {
+            var wellKnownAppName = SampleData.FrozenOrdinalStringDict[key];
+        }
+    }
+
     private sealed class ComplexKey
     {
         public string K1 { get; set; } = string.Empty;

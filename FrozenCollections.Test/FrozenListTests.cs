@@ -88,4 +88,22 @@ public static class FrozenListTests
         Assert.Equal(1, e2.Current);
         Assert.False(e2.MoveNext());
     }
+
+    [Fact]
+    public static void AsSpan()
+    {
+        var l = new List<int>
+        {
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        };
+
+        var fl = l.ToFrozenList();
+        var s = fl.AsSpan();
+
+        Assert.Equal(l.Count, s.Length);
+        for (int i = 0; i < l.Count; i++)
+        {
+            Assert.Equal(l[i], s[i]);
+        }
+    }
 }

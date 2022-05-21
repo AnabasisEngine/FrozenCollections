@@ -28,6 +28,50 @@ public static class DebugViewTests
     }
 
     [Fact]
+    public static void StringDictionaryDebugView()
+    {
+        var d = new Dictionary<string, int>
+        {
+            { "One", 1 },
+            { "Two", 2 },
+        };
+        var fd = d.ToFrozenDictionary();
+        var dv = new IFrozenOrdinalStringDictionaryDebugView<int>(fd);
+        var items = dv.Items;
+
+        Assert.Equal(d.Count, items.Length);
+        Assert.NotEqual(items[0].Key, items[1].Key);
+
+        Assert.True(d.ContainsKey(items[0].Key));
+        Assert.Equal(d[items[0].Key], items[0].Value);
+
+        Assert.True(d.ContainsKey(items[1].Key));
+        Assert.Equal(d[items[1].Key], items[1].Value);
+    }
+
+    [Fact]
+    public static void IntDictionaryDebugView()
+    {
+        var d = new Dictionary<int, string>
+        {
+            { 1, "One" },
+            { 2, "Two" },
+        };
+        var fd = d.ToFrozenDictionary();
+        var dv = new IFrozenIntDictionaryDebugView<string>(fd);
+        var items = dv.Items;
+
+        Assert.Equal(d.Count, items.Length);
+        Assert.NotEqual(items[0].Key, items[1].Key);
+
+        Assert.True(d.ContainsKey(items[0].Key));
+        Assert.Equal(d[items[0].Key], items[0].Value);
+
+        Assert.True(d.ContainsKey(items[1].Key));
+        Assert.Equal(d[items[1].Key], items[1].Value);
+    }
+
+    [Fact]
     public static void CollectionDebugView()
     {
         var l = new List<int>

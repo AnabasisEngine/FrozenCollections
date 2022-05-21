@@ -115,6 +115,22 @@ public static class FrozenOrdinalStringDictionaryTests
     }
 
     [Fact]
+    public static void LastWins()
+    {
+        var a = new[]
+        {
+            new KeyValuePair<string, string>("0", "Zero"),
+            new KeyValuePair<string, string>("1", "One"),
+            new KeyValuePair<string, string>("0", "Zero Repeat"),
+            new KeyValuePair<string, string>("1", "One Repeat"),
+        };
+
+        var fd = a.ToFrozenDictionary(false);
+        Assert.Equal("Zero Repeat", fd["0"]);
+        Assert.Equal("One Repeat", fd["1"]);
+    }
+
+    [Fact]
     public static void Empty()
     {
         var d = new Dictionary<string, string>();

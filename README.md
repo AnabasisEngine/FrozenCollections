@@ -50,28 +50,35 @@ access to the collections.
 Here's what it looks like:
 
 ```text
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.22000
 Intel Core i7-9700K CPU 3.60GHz (Coffee Lake), 1 CPU, 8 logical and 8 physical cores
-.NET SDK=6.0.200
-  [Host] : .NET 6.0.2 (6.0.222.6406), X64 RyuJIT
+.NET SDK=6.0.300
+  [Host] : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
+
+Job=MediumRun  Toolchain=InProcessEmitToolchain  IterationCount=15
+LaunchCount=2  WarmupCount=10
 
 |                                        Method |      Mean |     Error |    StdDev | Allocated |
 |---------------------------------------------- |----------:|----------:|----------:|----------:|
-|                ClassicOrdinalStringDictionary | 18.511 us | 0.0665 us | 0.0932 us |         - |
-|                 FrozenOrdinalStringDictionary |  9.619 us | 0.0623 us | 0.0933 us |         - |
-| ClassicOrdinalCaseInsensitiveStringDictionary | 21.608 us | 0.0664 us | 0.0931 us |         - |
-|  FrozenOrdinalCaseInsensitiveStringDictionary | 10.138 us | 0.1973 us | 0.2953 us |         - |
-|                          ClassicIntDictionary |  4.796 us | 0.0382 us | 0.0560 us |         - |
-|                           FrozenIntDictionary |  2.210 us | 0.0084 us | 0.0126 us |         - |
-|                      ClassicComplexDictionary | 41.461 us | 0.2098 us | 0.3075 us |         - |
-|                       FrozenComplexDictionary | 35.748 us | 0.1236 us | 0.1772 us |         - |
-|                       ClassicOrdinalStringSet | 17.612 us | 0.0834 us | 0.1222 us |         - |
-|                        FrozenOrdinalStringSet |  9.124 us | 0.0501 us | 0.0718 us |         - |
-|        ClassicOrdinalCaseInsensitiveStringSet | 21.164 us | 0.2285 us | 0.3350 us |         - |
-|         FrozenOrdinalCaseInsensitiveStringSet |  9.389 us | 0.0402 us | 0.0564 us |         - |
-|                                 ClassicIntSet |  4.317 us | 0.0133 us | 0.0186 us |         - |
-|                                  FrozenIntSet |  3.241 us | 0.0274 us | 0.0401 us |         - |
-|                             ClassicComplexSet | 40.548 us | 0.1182 us | 0.1618 us |         - |
-|                              FrozenComplexSet | 35.554 us | 0.3105 us | 0.4552 us |         - |
+|                ClassicOrdinalStringDictionary | 18.375 us | 0.1044 us | 0.1463 us |         - |
+|                 FrozenOrdinalStringDictionary | 10.177 us | 0.0396 us | 0.0580 us |         - |
+| ClassicOrdinalCaseInsensitiveStringDictionary | 21.689 us | 0.1559 us | 0.2236 us |         - |
+|  FrozenOrdinalCaseInsensitiveStringDictionary |  9.870 us | 0.0451 us | 0.0674 us |         - |
+|                          ClassicIntDictionary |  4.783 us | 0.0313 us | 0.0448 us |         - |
+|                           FrozenIntDictionary |  2.375 us | 0.0198 us | 0.0297 us |         - |
+|                      ClassicComplexDictionary | 41.187 us | 0.2961 us | 0.4431 us |         - |
+|                       FrozenComplexDictionary | 35.884 us | 0.2472 us | 0.3700 us |         - |
+|                       ClassicOrdinalStringSet | 18.111 us | 0.2622 us | 0.3843 us |         - |
+|                        FrozenOrdinalStringSet |  9.082 us | 0.0954 us | 0.1368 us |         - |
+|        ClassicOrdinalCaseInsensitiveStringSet | 21.022 us | 0.1300 us | 0.1865 us |         - |
+|         FrozenOrdinalCaseInsensitiveStringSet |  9.320 us | 0.0417 us | 0.0597 us |         - |
+|                                 ClassicIntSet |  4.320 us | 0.0160 us | 0.0234 us |         - |
+|                                  FrozenIntSet |  3.432 us | 0.0143 us | 0.0210 us |         - |
+|                             ClassicComplexSet | 40.872 us | 0.2945 us | 0.4129 us |         - |
+|                              FrozenComplexSet | 35.538 us | 0.2607 us | 0.3822 us |         - |
+|                    Substrate_NormalDictionary |  9.926 us | 0.0607 us | 0.0851 us |         - |
+|                    Substrate_FrozenDictionary |  6.695 us | 0.1768 us | 0.2646 us |         - |
+|       Substrate_FrozenOrdinalStringDictionary |  5.708 us | 0.0503 us | 0.0706 us |         - |
 ```
 
 The benchmarks are creating 512 entry dictionaries and sets and performing 1024 lookups in each dictionary. 1/2 the lookups don't find the key they're looking for.

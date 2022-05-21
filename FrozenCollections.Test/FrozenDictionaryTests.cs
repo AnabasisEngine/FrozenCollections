@@ -24,7 +24,7 @@ public static class FrozenDictionaryTests
             d.Add(i, $"V{i}");
         }
 
-        var fd = d.ToFrozenDictionary(comparer);
+        var fd = comparer == null ? d.ToFrozenDictionary() : d.ToFrozenDictionary(comparer);
         Assert.Equal(d.Count, fd.Count);
 
         foreach (var kvp in d)
@@ -34,6 +34,7 @@ public static class FrozenDictionaryTests
             Assert.Equal(kvp.Value, value);
             Assert.Equal(kvp.Value, fd[kvp.Key]);
             Assert.Equal(kvp.Value, fd.GetByRef(kvp.Key));
+            Assert.Equal(kvp.Value, fd.TryGetByRef(kvp.Key));
         }
 
         var s = new HashSet<long>();
@@ -119,6 +120,23 @@ public static class FrozenDictionaryTests
         Assert.False(fd.TryGetValue(-1, out _));
         Assert.Throws<KeyNotFoundException>(() => fd[-1]);
         Assert.Throws<KeyNotFoundException>(() => fd.GetByRef(-1));
+        Assert.True(ByReference.IsNull(fd.TryGetByRef(-1)));
+    }
+
+    [Fact]
+    public static void LastWins()
+    {
+        var a = new[]
+        {
+            new KeyValuePair<long, string>(0, "Zero"),
+            new KeyValuePair<long, string>(1, "One"),
+            new KeyValuePair<long, string>(0, "Zero Repeat"),
+            new KeyValuePair<long, string>(1, "One Repeat"),
+        };
+
+        var fd = a.ToFrozenDictionary();
+        Assert.Equal("Zero Repeat", fd[0]);
+        Assert.Equal("One Repeat", fd[1]);
     }
 
     [Fact]
@@ -140,6 +158,7 @@ public static class FrozenDictionaryTests
         Assert.False(fd.TryGetValue(-1, out _));
         Assert.Throws<KeyNotFoundException>(() => fd[-1]);
         Assert.Throws<KeyNotFoundException>(() => fd.GetByRef(-1));
+        Assert.True(ByReference.IsNull(fd.TryGetByRef(-1)));
     }
 
     [Fact]
@@ -163,5 +182,23 @@ public static class FrozenDictionaryTests
         Assert.True(e2.MoveNext());
         Assert.Equal("One", e2.Current.Key);
         Assert.False(e2.MoveNext());
+    }
+
+    [Fact]
+    public static void SpecialComparers()
+    {
+        var a = new[]
+        {
+            new KeyValuePair<string, int>("abcd", 0),
+            new KeyValuePair<string, int>("ABCD", 1),
+        };
+
+        var fd = a.ToFrozenDictionary(StringComparer.Ordinal);
+        Assert.Equal(typeof(StringComparers.LeftHandSingleCharStringComparer), fd.Comparer.GetType());
+        Assert.Equal(2, fd.Count);
+
+        fd = a.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+        Assert.Equal(typeof(StringComparers.LeftHandCaseInsensitiveAsciiStringComparer), fd.Comparer.GetType());
+        Assert.Single(fd);
     }
 }

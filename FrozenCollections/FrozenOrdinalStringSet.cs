@@ -18,7 +18,7 @@ namespace FrozenCollections;
 /// where a set is created at startup of an application and used throughout the life
 /// of the application.
 /// </remarks>
-[DebuggerTypeProxy(typeof(IReadOnlyCollectionDebugView<>))]
+[DebuggerTypeProxy(typeof(IReadOnlyCollectionDebugView<string>))]
 [DebuggerDisplay("Count = {Count}")]
 [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Not appropriate for this type")]
 public readonly struct FrozenOrdinalStringSet : IFrozenSet<string>, IFindItem<string>
@@ -39,7 +39,7 @@ public readonly struct FrozenOrdinalStringSet : IFrozenSet<string>, IFindItem<st
     /// <exception cref="ArgumentException">If more than 64K items are added.</exception>
     internal FrozenOrdinalStringSet(IEnumerable<string> items, bool ignoreCase = false)
     {
-        var incoming = new HashSet<string>(items).ToList();
+        var incoming = new HashSet<string>(items, ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal).ToList();
 
         _items = incoming.Count == 0 ? Array.Empty<string>() : new string[incoming.Count];
         Comparer = ComparerPicker.Pick(incoming, ignoreCase);
@@ -94,7 +94,7 @@ public readonly struct FrozenOrdinalStringSet : IFrozenSet<string>, IFindItem<st
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (Comparer.EqualsFullLength(item, _items[index]))
+                    if (Comparer.Equals(item, _items[index]))
                     {
                         return true;
                     }
@@ -123,7 +123,7 @@ public readonly struct FrozenOrdinalStringSet : IFrozenSet<string>, IFindItem<st
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (Comparer.EqualsFullLength(item, _items[index]))
+                    if (Comparer.Equals(item, _items[index]))
                     {
                         return index;
                     }

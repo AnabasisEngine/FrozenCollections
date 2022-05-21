@@ -24,11 +24,20 @@ public static class EmptyFrozenTests
         Assert.Empty(default(FrozenOrdinalStringSet));
 
         Assert.False(default(FrozenDictionary<string, int>).ContainsKey("123"));
+        Assert.False(default(FrozenDictionary<string, int>).TryGetValue("123", out var v1));
+        Assert.Throws<KeyNotFoundException>(() => default(FrozenDictionary<string, int>)["123"]);
+        Assert.Throws<KeyNotFoundException>(() => default(FrozenDictionary<string, int>).GetByRef("123"));
+        Assert.True(ByReference.IsNull(default(FrozenDictionary<string, int>).TryGetByRef("123")));
         Assert.False(default(FrozenIntDictionary<int>).ContainsKey(1));
         Assert.False(default(FrozenOrdinalStringDictionary<int>).ContainsKey("123"));
+        Assert.False(default(FrozenOrdinalStringDictionary<int>).TryGetValue("123", out v1));
+        Assert.Throws<KeyNotFoundException>(() => default(FrozenOrdinalStringDictionary<int>)["123"]);
+        Assert.Throws<KeyNotFoundException>(() => default(FrozenOrdinalStringDictionary<int>).GetByRef("123"));
+        Assert.True(ByReference.IsNull(default(FrozenOrdinalStringDictionary<int>).TryGetByRef("123")));
         Assert.False(default(FrozenSet<int>).Contains(1));
         Assert.False(default(FrozenIntSet).Contains(1));
         Assert.False(default(FrozenOrdinalStringSet).Contains("123"));
+        Assert.False(default(FrozenOrdinalStringSet).IsProperSupersetOf(new[] { "One", "Two" }));
 
 #pragma warning disable IDE0004 // Remove Unnecessary Cast
         Assert.Empty(Freezer.ToFrozenDictionary<string, int>(null));

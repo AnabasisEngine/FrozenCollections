@@ -68,6 +68,20 @@ public static class FrozenIntSetTests
     }
 
     [Fact]
+    public static void RepeatOK()
+    {
+        var a = new[]
+        {
+            0, 1, 0, 1,
+        };
+
+        var fs = a.ToFrozenSet();
+        Assert.Equal(2, fs.Count);
+        Assert.True(fs.Contains(0));
+        Assert.True(fs.Contains(1));
+    }
+
+    [Fact]
     public static void Empty()
     {
         var s = new HashSet<int>();

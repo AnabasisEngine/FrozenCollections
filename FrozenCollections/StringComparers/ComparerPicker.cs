@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace FrozenCollections.StringComparers;
@@ -70,8 +71,8 @@ internal static class ComparerPicker
         PartialStringComparerBase leftComparer = ignoreCase ? new LeftHandCaseInsensitiveStringComparer() : new LeftHandStringComparer();
         PartialStringComparerBase rightComparer = ignoreCase ? new RightHandCaseInsensitiveStringComparer() : new RightHandStringComparer();
 
-        var leftSet = new HashSet<string>(leftComparer as IEqualityComparer<string>);
-        var rightSet = new HashSet<string>(rightComparer as IEqualityComparer<string>);
+        var leftSet = new HashSet<string>(new ComparerWrapper(leftComparer));
+        var rightSet = new HashSet<string>(new ComparerWrapper(rightComparer));
         for (int count = 1; count <= maxSubstringLength; count++)
         {
             for (int index = 0; index < maxSubstringLength - count; index++)
@@ -168,6 +169,19 @@ internal static class ComparerPicker
         }
 
         return new FullCaseInsensitiveAsciiStringComparer();
+    }
+
+    private sealed class ComparerWrapper : IEqualityComparer<string>
+    {
+        private readonly PartialStringComparerBase _comp;
+
+        public ComparerWrapper(PartialStringComparerBase comp)
+        {
+            _comp = comp;
+        }
+
+        public bool Equals(string? x, string? y) => _comp.EqualsPartial(x, y);
+        public int GetHashCode([DisallowNull] string obj) => _comp.GetHashCode(obj);
     }
 
 #pragma warning disable S109 // Magic numbers should not be used

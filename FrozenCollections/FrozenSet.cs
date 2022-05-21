@@ -48,6 +48,15 @@ public readonly struct FrozenSet<T> : IFrozenSet<T>, IFindItem<T>
     {
         var incoming = new HashSet<T>(items, comparer).ToList();
 
+        if (object.ReferenceEquals(comparer, StringComparer.OrdinalIgnoreCase))
+        {
+            comparer = (IEqualityComparer<T>)StringComparers.ComparerPicker.Pick((IReadOnlyCollection<string>)incoming, true);
+        }
+        else if (object.ReferenceEquals(comparer, StringComparer.Ordinal))
+        {
+            comparer = (IEqualityComparer<T>)StringComparers.ComparerPicker.Pick((IReadOnlyCollection<string>)incoming, false);
+        }
+
         _items = incoming.Count == 0 ? Array.Empty<T>() : new T[incoming.Count];
         Comparer = comparer;
 
@@ -119,7 +128,7 @@ public readonly struct FrozenSet<T> : IFrozenSet<T>, IFindItem<T>
     /// <returns>The index of the item, or -1 if the item was not found.</returns>
     int IFindItem<T>.FindItemIndex(T item)
     {
-        var hashCode = Comparer?.GetHashCode(item) ?? 0;
+        var hashCode = Comparer!.GetHashCode(item); // guaranteed never to be called when the collection is empty, which means comparer will always be valid
         _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
 
         while (index <= endIndex)

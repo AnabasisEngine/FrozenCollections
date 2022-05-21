@@ -19,7 +19,7 @@ namespace FrozenCollections;
 /// where a dictionary is created at startup of an application and used throughout the life
 /// of the application.
 /// </remarks>
-[DebuggerTypeProxy(typeof(IFrozenDictionaryDebugView<,>))]
+[DebuggerTypeProxy(typeof(IFrozenOrdinalStringDictionaryDebugView<>))]
 [DebuggerDisplay("Count = {Count}")]
 [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Not appropriate for this type")]
 public readonly struct FrozenOrdinalStringDictionary<TValue> : IFrozenDictionary<string, TValue>
@@ -46,17 +46,13 @@ public readonly struct FrozenOrdinalStringDictionary<TValue> : IFrozenDictionary
     /// </remarks>
     internal FrozenOrdinalStringDictionary(IEnumerable<KeyValuePair<string, TValue>> pairs, bool ignoreCase = false)
     {
-#if NETCOREAPP3_1_OR_GREATER
-        var incoming = new Dictionary<string, TValue>(pairs).ToList();
-#else
-        var d = new Dictionary<string, TValue>();
+        var d = new Dictionary<string, TValue>(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
         foreach (var pair in pairs)
         {
             d[pair.Key] = pair.Value;
         }
 
         var incoming = d.ToList();
-#endif
 
         _keys = incoming.Count == 0 ? Array.Empty<string>() : new string[incoming.Count];
         _values = incoming.Count == 0 ? Array.Empty<TValue>() : new TValue[incoming.Count];
@@ -132,7 +128,7 @@ public readonly struct FrozenOrdinalStringDictionary<TValue> : IFrozenDictionary
                 {
                     if (hashCode == _hashTable.EntryHashCode(index))
                     {
-                        if (_comparer.EqualsFullLength(key, _keys[index]))
+                        if (_comparer.Equals(key, _keys[index]))
                         {
                             return _values[index];
                         }
@@ -163,7 +159,7 @@ public readonly struct FrozenOrdinalStringDictionary<TValue> : IFrozenDictionary
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (_comparer.EqualsFullLength(key, _keys[index]))
+                    if (_comparer.Equals(key, _keys[index]))
                     {
                         return true;
                     }
@@ -198,7 +194,7 @@ public readonly struct FrozenOrdinalStringDictionary<TValue> : IFrozenDictionary
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (_comparer.EqualsFullLength(key, _keys[index]))
+                    if (_comparer.Equals(key, _keys[index]))
                     {
                         value = _values[index];
                         return true;
@@ -226,7 +222,7 @@ public readonly struct FrozenOrdinalStringDictionary<TValue> : IFrozenDictionary
             {
                 if (hashCode == _hashTable.EntryHashCode(index))
                 {
-                    if (_comparer.EqualsFullLength(key, _keys[index]))
+                    if (_comparer.Equals(key, _keys[index]))
                     {
                         return ref _values[index];
                     }
@@ -237,5 +233,31 @@ public readonly struct FrozenOrdinalStringDictionary<TValue> : IFrozenDictionary
         }
 
         throw new KeyNotFoundException();
+    }
+
+    /// <inheritdoc />
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Skip for speed")]
+    public ref readonly TValue TryGetByRef(string key)
+    {
+        if (_comparer != null && !_comparer.TrivialReject(key))
+        {
+            var hashCode = _comparer.GetHashCode(key);
+            _hashTable.FindMatchingEntries(hashCode, out var index, out var endIndex);
+
+            while (index <= endIndex)
+            {
+                if (hashCode == _hashTable.EntryHashCode(index))
+                {
+                    if (_comparer.Equals(key, _keys[index]))
+                    {
+                        return ref _values[index];
+                    }
+                }
+
+                index++;
+            }
+        }
+
+        return ref ByReference.Null<TValue>();
     }
 }

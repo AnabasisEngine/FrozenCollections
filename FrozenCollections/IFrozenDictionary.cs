@@ -46,4 +46,12 @@ public interface IFrozenDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TVa
     /// <returns>A reference to the value associated with the key.</returns>
     /// <exception cref="KeyNotFoundException">If the specifed key doesn't exist in the dictionary.</exception>.
     ref readonly TValue GetByRef(TKey key);
+
+    /// <summary>
+    /// Gets a reference to a value in the dictionary.
+    /// </summary>
+    /// <param name="key">The key to lookup.</param>
+    /// <returns>A reference to the value associated with the key, or a null reference if the specified key doesn't exist in the dictionary.</returns>
+    /// <remarks>Use <see cref="ByReference.IsNull"/> to test for the null reference return.</remarks>
+    ref readonly TValue TryGetByRef(TKey key);
 }

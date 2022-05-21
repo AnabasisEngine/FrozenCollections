@@ -17,7 +17,7 @@ namespace FrozenCollections;
 /// where a set is created at startup of an application and used throughout the life
 /// of the application.
 /// </remarks>
-[DebuggerTypeProxy(typeof(IReadOnlyCollectionDebugView<>))]
+[DebuggerTypeProxy(typeof(IReadOnlyCollectionDebugView<int>))]
 [DebuggerDisplay("Count = {Count}")]
 [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Not appropriate for this type")]
 public readonly struct FrozenIntSet : IFrozenSet<int>, IFindItem<int>
@@ -56,6 +56,7 @@ public readonly struct FrozenIntSet : IFrozenSet<int>, IFindItem<int>
     /// </summary>
     /// <returns>The enumerator.</returns>
     IEnumerator IEnumerable.GetEnumerator() => Count > 0 ? GetEnumerator() : EmptyReadOnlyList<int>.Instance.GetEnumerator();
+
 
     /// <summary>
     /// Gets the number of items in the set.

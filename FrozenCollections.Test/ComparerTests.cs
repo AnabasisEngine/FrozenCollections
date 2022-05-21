@@ -1,21 +1,36 @@
-﻿using FrozenCollections.StringComparers;
+﻿using System.Diagnostics.CodeAnalysis;
+using FrozenCollections.StringComparers;
 using Xunit;
 
 namespace FrozenCollections.Test;
 
 public static class ComparerTests
 {
-    private static void Equal(StringComparerBase c, string a, string b, bool fullEqual)
+    private static void Equal(PartialStringComparerBase c, string a, string b, bool fullEqual)
     {
-        Assert.True(c.Equals(a, b));
+        Assert.True(c.EqualsPartial(a, b));
         Assert.Equal(c.GetHashCode(a), c.GetHashCode(b));
-        Assert.Equal(fullEqual, c.EqualsFullLength(a, b));
+        Assert.Equal(fullEqual, c.Equals(a, b));
     }
 
+    [SuppressMessage("Minor Code Smell", "S3242:Method parameters should be declared with base types", Justification = "We want this type specifically")]
+    private static void Equal(StringComparerBase c, string a, string b, bool fullEqual)
+    {
+        Assert.Equal(c.GetHashCode(a), c.GetHashCode(b));
+        Assert.Equal(fullEqual, c.Equals(a, b));
+    }
+
+    private static void NotEqual(PartialStringComparerBase c, string a, string b)
+    {
+        Assert.False(c.EqualsPartial(a, b));
+        Assert.False(c.Equals(a, b));
+        Assert.NotEqual(c.GetHashCode(a), c.GetHashCode(b));
+    }
+
+    [SuppressMessage("Minor Code Smell", "S3242:Method parameters should be declared with base types", Justification = "We want this type specifically")]
     private static void NotEqual(StringComparerBase c, string a, string b)
     {
         Assert.False(c.Equals(a, b));
-        Assert.False(c.EqualsFullLength(a, b));
         Assert.NotEqual(c.GetHashCode(a), c.GetHashCode(b));
     }
 

@@ -12,8 +12,7 @@ namespace FrozenCollections.StringComparers;
 /// </remarks>
 internal sealed class FullCaseInsensitiveStringComparer : StringComparerBase
 {
-    public override bool Equals(string x, string y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
-    public override bool EqualsFullLength(string x, string y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
+    public override bool Equals(string? x, string? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
     public override int GetHashCode(string s) => Hashing.GetCaseInsensitiveHashCode(s.AsSpan());
     public override bool CaseInsensitive => true;
 }
